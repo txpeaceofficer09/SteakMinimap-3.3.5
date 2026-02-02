@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: SteakMinimap
+## Notes: Customize the minimap.
+## DefaultState: enabled
+## Author: SoonBeSteak (https://www.trap-nine.com)
+## Version: 1.0.5
+Core.lua
