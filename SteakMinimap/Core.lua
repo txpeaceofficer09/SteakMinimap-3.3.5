@@ -1,31 +1,43 @@
 local f = CreateFrame("ScrollFrame", "MapFrame", UIParent)
+
 CreateFrame("Frame", "MMBF", UIParent)
 MMBF:SetSize(50, 50)
 MMBF:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, 0)
 MMBF:Show()
 
---local MAP_SCALE = 4*0.68
---local MAP_SCALE = 2.05
---local MAP_SCALE = 1.875
-local MAP_SCALE = 1
+local MAPW = 1002
+local MAPH = 662
 
-local MAPW = 1002 * MAP_SCALE
-local MAPH = 662 * MAP_SCALE
+local TXTW = 256
+local TXTH = 256
 
-local TXTW = 256 * MAP_SCALE
-local TXTH = 256 * MAP_SCALE
+local MMAPW = 312
+local MMAPH = 220
 
 f:EnableKeyboard(false)
 f:EnableMouse(true)
 f:EnableMouseWheel(true)
 
 f:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 20)
-f:SetSize(190, 150)
+f:SetSize(MMAPW, MMAPH)
 f:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
 
 f:SetFrameStrata("HIGH")
---f:SetFrameLevel(MainMenuBar:GetFrameLevel()+10)
 f:SetFrameLevel(25)
+
+local coordFrame = CreateFrame("Frame", nil, UIParent)
+coordFrame:SetSize(80, 20)
+coordFrame:SetPoint("BOTTOMLEFT", MapFrame, "BOTTOMLEFT", 0, 0)
+coordFrame:SetFrameStrata("HIGH")
+coordFrame:SetFrameLevel(f:GetFrameLevel()+2)
+coordFrame:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
+
+local coordText = coordFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+coordText:SetPoint("BOTTOMLEFT", coordFrame, "BOTTOMLEFT", 5, 5)
+coordText:SetTextColor(1, 1, 1)
+coordText:SetDrawLayer("OVERLAY", 7) 
+coordText:SetShadowColor(0, 0, 0, 1)
+coordText:SetShadowOffset(1, -1)
 
 local sc = CreateFrame("Frame", "MapFrameSC", MapFrame)
 
@@ -87,6 +99,7 @@ local function CreateBlob(index, questID)
 
 		BlobFrame:SetPoint("TOPLEFT", MapFrameSC, "TOPLEFT", 0, 0)
 		BlobFrame:SetSize(1002, 662)
+		--BlobFrame:SetAllPoints(MapFrameSC)
 		BlobFrame:Show()
 
 		BlobFrame:SetFillTexture("Interface\\WorldMap\\UI-QuestBlob-Inside")
@@ -105,11 +118,11 @@ local function CreateBlob(index, questID)
 	return questBlobs[index]
 end
 
---local PlayerArrow = CreateFrame("Frame", "MapFramePlayerArrowFrame", MapFrame)
-local PlayerArrow = CreateFrame("Frame", "MapFramePlayerArrowFrame", MapFrameSC)
+local PlayerArrow = CreateFrame("Frame", "MapFramePlayerArrowFrame", MapFrame)
+--local PlayerArrow = CreateFrame("Frame", "MapFramePlayerArrowFrame", MapFrameSC)
 PlayerArrow:SetSize(64, 64)
---PlayerArrow:SetPoint("CENTER", MapFrame, "CENTER", 0, 0)
-PlayerArrow:SetFrameLevel(MapFrameSC:GetFrameLevel() + 25)
+PlayerArrow:SetPoint("CENTER", MapFrame, "CENTER", 0, 0)
+--PlayerArrow:SetFrameLevel(MapFrameSC:GetFrameLevel() + 25)
 
 PlayerArrow.texture = PlayerArrow:CreateTexture(nil, "OVERLAY")		
 PlayerArrow.texture:SetAllPoints(PlayerArrow)
@@ -197,9 +210,17 @@ local function MapFrame_UpdateQuestIcons()
     local mapW = MapFrameSC:GetWidth()
     local mapH = MapFrameSC:GetHeight()
 
-    for _, child in ipairs({MapFrameSC:GetChildren()}) do
-    	if strsub(child:GetName(), 1, 15) == "MapFrameSC_POI_" then child:Hide() end
+    local children = MapFrameSC:GetChildren()
+
+    if children and #children > 0 then
+    	for _, child in ipairs(children) do
+    		if child:GetName():strsub(1, 15) == "MapFrameSC_POI_" then child:Hide() end
+    	end
     end
+
+    --for _, child in ipairs({MapFrameSC:GetChildren()}) do
+    --	if strsub(child:GetName(), 1, 15) == "MapFrameSC_POI_" then child:Hide() end
+    --end
 
     for i = 1, GetNumQuestLogEntries() do
         --local questTitle, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID = GetQuestLogTitle(i)
@@ -345,6 +366,22 @@ function MapFrame_UpdateTextures()
 	local mapFileName, textureHeight, textureWidth = GetMapInfo()
 	local dungeonLevel = GetCurrentMapDungeonLevel()
 
+	if mapFileName then
+		SteakMinimapZones[mapFileName] = {
+			width = textureWidth,
+			height = textureHeight,
+			textureWidth = textureWidth / 4,
+			textureHeight = textureHeight / 3
+		}
+	end
+
+	--MapFrameSC:SetSize(textureWidth, textureHeight)
+	--[[
+	for i=1,12 do
+		_G["MapFrameTexture"..i]:SetSize(textureWidth/4, textureHeight/3)
+	end
+	]]
+
 	if DungeonUsesTerrainMap() then dungeonLevel = dungeonLevel - 1 end
 
 	if not mapFileName then
@@ -360,22 +397,18 @@ function MapFrame_UpdateTextures()
 
 	for i=1, NUM_WORLDMAP_DETAIL_TILES, 1 do
 		if dungeonLevel > 0 then
-			--_G["MapFrameTexture"..i]:SetTexture("Interface\\WorldMap\\"..mapFileName.."\\"..mapFileName..dungeonLevel.."_"..i)
-			--_G["MapFrameTexture"..i]:SetTexture("Interface\\AddOns\\SteakMinimap\\WorldMap\\"..mapFileName.."\\"..mapFileName..dungeonLevel.."_"..i)
 			_G["MapFrameTexture"..i]:SetTexture(prefix..mapFileName.."\\"..mapFileName..dungeonLevel.."_"..i)
-			--if IsInInstance() then print(prefix..mapFileName.."\\"..mapFileName..dungeonLevel.."_"..i) end
 		else
-			--_G["MapFrameTexture"..i]:SetTexture("Interface\\WorldMap\\"..mapFileName.."\\"..mapFileName..i)
-			--_G["MapFrameTexture"..i]:SetTexture("Interface\\AddOns\\SteakMinimap\\WorldMap\\"..mapFileName.."\\"..mapFileName..i)
 			_G["MapFrameTexture"..i]:SetTexture(prefix..mapFileName.."\\"..mapFileName..i)
-			--if IsInInstance() then print(prefix..mapFileName.."\\"..mapFileName..i) end
 		end
 	end
 
 	if IsInCity() or IsInInstance() then
 		Minimap:SetZoom(3)
+		Minimap:SetSize(150, 150)
 	else
 		--Minimap:SetZoom(0)
+		Minimap:SetSize(100, 100)
 		Minimap:SetZoom(1)
 	end
 
@@ -429,18 +462,20 @@ local function OnEvent(self, event, ...)
 		self:Show()
 
 		MapFrame_UpdateQuestIcons()
-		MapFrame_UpdateBlobs()
+		--MapFrame_UpdateBlobs()
+	elseif event == "VARIABLES_LOADED" then
+		SteakMinimapZones = SteakMinimapZones or {}
 	elseif event == "WORLD_MAP_UPDATE" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "WORLD_MAP_NAME_UPDATE" then
 		MapFrame_UpdateTextures()
 		MapFrame_UpdateQuestIcons()
-		MapFrame_UpdateBlobs()
+		--MapFrame_UpdateBlobs()
 	elseif event == "ZONE_CHANGED_NEW_AREA" then
 		MapFrame_UpdateTextures()
 		MapFrame_UpdateQuestIcons()
-		MapFrame_UpdateBlobs()
+		--MapFrame_UpdateBlobs()
 	elseif event == "QUEST_LOG_UPDATE" or event == "QUEST_POI_UPDATE" then
 		MapFrame_UpdateQuestIcons()
-		MapFrame_UpdateBlobs()
+		--MapFrame_UpdateBlobs()
 	end	
 end
 
@@ -495,7 +530,7 @@ f:SetScript("OnUpdate", function(self, elapsed)
 
 	Minimap:ClearAllPoints()
 	Minimap:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
-	PlayerArrow:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
+	--PlayerArrow:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
 
 	local currentScale = MapFrameSC:GetScale()
     local scrollX = ((unitX * mapWidth * currentScale) - (self:GetWidth() / 2)) / currentScale
@@ -570,11 +605,12 @@ f:SetScript("OnUpdate", function(self, elapsed)
 		--self.growTimer = (self.growTimer or 0) + elapsed
 
 		--if self.growTimer >= 0.01 then
+			--[[
     		local width = MapFrame:GetWidth()
     		local height = MapFrame:GetHeight()
 
-	    	local scaleX = (500-190)/2
-    		local scaleY = (500-150)/2
+	    	local scaleX = (500-MMAPW)/2
+    		local scaleY = (500-MMAPH)/2
 
     		if (self.grow or false) == true then
 	    		if width < 500 then width = width + scaleX end
@@ -583,46 +619,41 @@ f:SetScript("OnUpdate", function(self, elapsed)
    				if height < 500 then height = height + scaleY end
    				if height > 500 then height = 500 end
    			else
-   				if width > 190 then width = width - scaleX end
-   				if width < 190 then width = 190 end
+   				if width > MMAPW then width = width - scaleX end
+   				if width < MMAPW then width = MMAPW end
 
-   				if height > 150 then height = height - scaleY end
-   				if height < 150 then height = 150 end
+   				if height > MMAPH then height = height - scaleY end
+   				if height < MMAPH then height = MMAPH end
 	   		end
 
 			MapFrame:SetSize(width, height)
-
+			]]
 	   		--self.growTimer = 0
 	   	--end
 
+		self.coordTimer = (self.coordTimer or 0) + elapsed
+
+		if self.coordTimer >= 0.1 then
+			coordText:SetText(string.format("%.1f, %.1f", unitX * 100, unitY * 100))
+			coordFrame:SetWidth(coordText:GetWidth()+10)
+
+			self.coordTimer = 0
+		end
 	end
 end)
 
+--[[
 local growFrames = { MapFrame, Minimap, MapFrameSC }
 for _, frame in ipairs(growFrames) do
 	frame:SetScript("OnEnter", function(self) MapFrame.grow = true end)
 	frame:SetScript("OnLeave", function(self) MapFrame.grow = false end)
 end
-
---MapFrame:SetScript("OnEnter", function(self) self.grow = true; end)
---MapFrame:SetScript("OnLeave", function(self) self.grow = false; end)
-
---Minimap:SetScript("OnEnter", function(self) MapFrame.grow = true; end)
---Minimap:SetScript("OnLeave", function(self) MapFrame.grow = false; end)
-
---MapFrameSC:SetScript("OnEnter", function(self) MapFrame.grow = true; end)
---MapFrameSC:SetScript("OnLeave", function(self) MapFrame.grow = false; end)
-
---MapFrameSC:SetScript("OnEnter", function(self) MapFrame:SetSize(500, 500) end)
---MapFrameSC:SetScript("OnLeave", function(self) MapFrame:SetSize(190, 150) end)
-
---MapFrame:EnableMouse(false)
---Minimap:EnableMouse(false)
+]]
 
 f:SetScript("OnMouseWheel", function(self, delta)
-	if delta > 0 and MapFrameSC:GetScale() < 1 then
+	if delta > 0 and MapFrameSC:GetScale() < 2 then
 		MapFrameSC:SetScale(MapFrameSC:GetScale()+0.01)
-	elseif MapFrameSC:GetScale() > 0.5 then
+	elseif MapFrameSC:GetScale() > 0.4 then
 		MapFrameSC:SetScale(MapFrameSC:GetScale()-0.01)
 	end
 end)
@@ -662,32 +693,3 @@ MMBF:SetScript("OnUpdate", function(self, elapsed)
 		self.timer = 0
 	end
 end)
-
-SLASH_STEAKMINIMAP1 = "/steakmap"
-SlashCmdList["STEAKMINIMAP"] = function(msg)
-	
-end
-
-SLASH_MAPSCALE1 = "/mapscale"
-SlashCmdList["MAPSCALE"] = function(msg)
-    local factor = tonumber(msg)
-    local f = MapFrameSC
-    if f and factor then
-        -- Scale the main frame
-        f:SetSize(1002 * factor, 662 * factor)
-        
-        -- Scale all child textures and font strings
-        local children = {f:GetRegions()}
-        for i = 1, #children do
-            local obj = children[i]
-            if obj.SetSize then
-                obj:SetSize(256 * factor, 256 * factor)
-            end
-        end
-        print("Map textures and frame scaled by factor: " .. factor)
-    else
-    	print("Map scale: "..MAP_SCALE)
-    end
-end
-
---GameTooltip:SetFrameLevel(MapFrame:GetFrameLevel()+100)

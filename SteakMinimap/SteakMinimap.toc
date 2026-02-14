@@ -4,4 +4,5 @@
 ## DefaultState: enabled
 ## Author: SoonBeSteak (https://www.trap-nine.com)
 ## Version: 1.0.5
+## SavedVariables: SteakMinimapZones
 Core.lua
