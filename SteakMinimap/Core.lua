@@ -829,3 +829,9 @@ MMBF:SetScript("OnUpdate", function(self, elapsed)
 		self.timer = 0
 	end
 end)
+
+hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)
+	tooltip:ClearAllPoints()
+	tooltip:SetOwner(parent, "ANCHOR_NONE")
+	tooltip:SetPoint("BOTTOMRIGHT", MapFrame, "TOPRIGHT", -20, 20)
+end)
