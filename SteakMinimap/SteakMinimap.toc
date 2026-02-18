@@ -4,5 +4,6 @@
 ## DefaultState: enabled
 ## Author: SoonBeSteak (https://www.trap-nine.com)
 ## Version: 1.0.5
+## OptionalDeps: GatherMate
 ## SavedVariables: SteakMinimapZones
 Core.lua

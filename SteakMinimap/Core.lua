@@ -32,7 +32,9 @@ coordFrame:SetFrameStrata("HIGH")
 coordFrame:SetFrameLevel(f:GetFrameLevel()+2)
 coordFrame:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
 
-local coordText = coordFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+--local coordText = coordFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+local coordText = coordFrame:CreateFontString(nil, "OVERLAY")
+coordText:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
 coordText:SetPoint("BOTTOMLEFT", coordFrame, "BOTTOMLEFT", 5, 5)
 coordText:SetTextColor(1, 1, 1)
 coordText:SetDrawLayer("OVERLAY", 7) 
@@ -63,6 +65,23 @@ sc:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark
 sc:Show()
 
 f:Show()
+
+local zoneOverride = {
+	["IcecrownGlacier"] = {
+		["Minimap"] = {
+			["Size"] = { width = 70, height = 70 },
+			["Zoom"] = 1
+		}
+	},
+	["Ogrimmar"] = {
+		["Minimap"] = {
+			["Size"] = { width = 75, height = 75 },
+			["Zoom"] = 3
+		}
+	}
+}
+
+--local GatherMateReady = false
 
 local blobColors = {
     {r=255, g=0,   b=0,   a=100}, -- 1: Red
@@ -282,6 +301,108 @@ local function MapFrame_UpdateQuestIcons()
     end
 end
 
+--[[
+local function MapFrame_UpdateHerbNodes()
+    if not GatherMate2HerbDB then return end
+
+    local mapFile = GetMapInfo()
+    if not mapFile then return end
+
+    local zoneID = GatherMate2.zoneData[mapFile]
+    if not zoneID then return end
+
+    local mapW = MapFrameSC:GetWidth()
+    local mapH = MapFrameSC:GetHeight()
+
+    -- Hide old nodes
+    for _, dot in pairs(herbNodes) do dot:Hide() end
+
+    local index = 1
+    for coord, herbType in pairs(GatherMate2HerbDB[zoneID] or {}) do
+        local x = floor(coord / 10000) / 10000
+        local y = (coord % 10000) / 10000
+
+        local dot = GetHerbNodeDot(index)
+
+        local posX = x * mapW
+        local posY = -y * mapH
+
+        dot:ClearAllPoints()
+        dot:SetPoint("CENTER", MapFrameSC, "TOPLEFT", posX, posY)
+        dot:Show()
+
+        index = index + 1
+    end
+end
+]]
+
+local gmHerbDots = {}
+
+local function GetGMHerbDot(index)
+    if not gmHerbDots[index] then
+        local dot = CreateFrame("Frame", "MapFrameGMHerb"..index, MapFrameSC)
+        dot:SetSize(16, 16)
+
+        --local glow = dot:CreateTexture(nil, "BACKGROUND")
+        --glow:SetPoint("CENTER")
+        --glow:SetSize(32, 32)
+	--glow:SetTexture("Interface\\Cooldown\\star4")
+        --glow:SetVertexColor(0, 0, 0, 0.8)
+        --glow:SetBlendMode("ADD")
+        --dot.glow = glow
+
+        local tex = dot:CreateTexture(nil, "OVERLAY")
+        tex:SetAllPoints()
+        dot.tex = tex
+        gmHerbDots[index] = dot
+    end
+
+    return gmHerbDots[index]
+end
+
+local function MapFrame_UpdateHerbNodes()
+    if not GatherMateHerbDB then return end
+
+    local zoneName = GetZoneText()
+    if not zoneName then return end
+
+    local zoneInfo = GatherMate.zoneData[zoneName]
+    if not zoneInfo then return end
+
+    local zoneID = zoneInfo[3]
+    if not zoneID then return end
+
+    local herbData = GatherMateHerbDB[zoneID]
+    if not herbData then return end
+
+    local mapW = MapFrameSC:GetWidth()
+    local mapH = MapFrameSC:GetHeight()
+
+    for _, dot in pairs(gmHerbDots) do dot:Hide() end
+
+    local index = 1
+    for coord, herbType in pairs(herbData) do
+        local x = floor(coord / 10000) / 10000
+        local y = (coord % 10000) / 10000
+
+        local dot = GetGMHerbDot(index)
+        dot:ClearAllPoints()
+        dot:SetPoint("CENTER", MapFrameSC, "TOPLEFT", x * mapW, -y * mapH)
+
+	local icon = GatherMate.nodeTextures["Herb Gathering"][herbType]
+
+	if icon then
+		dot.tex:SetTexture(icon)
+	else
+		dot.tex:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+	end
+
+        dot:Show()
+
+        index = index + 1
+    end
+end
+
 function MoveMinimapButtons()
 	local frames = {}
 	local kids = {Minimap:GetChildren()}
@@ -363,8 +484,18 @@ function MoveMinimapButtons()
 end
 
 function MapFrame_UpdateTextures()
+	--SetMapToCurrentZone()
+
 	local mapFileName, textureHeight, textureWidth = GetMapInfo()
 	local dungeonLevel = GetCurrentMapDungeonLevel()
+
+	if IsInCity() or IsInInstance() then
+		Minimap:SetZoom(3)
+		Minimap:SetSize(150, 150)
+	else
+		Minimap:SetSize(70, 70)
+		Minimap:SetZoom(1)
+	end
 
 	if mapFileName then
 		SteakMinimapZones[mapFileName] = {
@@ -403,15 +534,6 @@ function MapFrame_UpdateTextures()
 		end
 	end
 
-	if IsInCity() or IsInInstance() then
-		Minimap:SetZoom(3)
-		Minimap:SetSize(150, 150)
-	else
-		--Minimap:SetZoom(0)
-		Minimap:SetSize(100, 100)
-		Minimap:SetZoom(1)
-	end
-
 	local numPOIs = GetNumMapLandmarks()
 	if ( #poiDots < numPOIs ) then
 		for i=#poiDots+1,numPOIs do
@@ -443,7 +565,11 @@ function MapFrame_UpdateTextures()
 end
 
 local function OnEvent(self, event, ...)
-	if event == "PLAYER_ENTERING_WORLD" then
+	if event == "ADDON_LOADED" then
+--		local addonName = ...
+
+--		if addonName == "GatherMate" then GatherMateReady = true end
+	elseif event == "PLAYER_ENTERING_WORLD" then
 		Minimap:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
 		Minimap:SetParent(MapFrameSC)
 		Minimap:SetSize(150, 150)
@@ -465,18 +591,15 @@ local function OnEvent(self, event, ...)
 		--MapFrame_UpdateBlobs()
 	elseif event == "VARIABLES_LOADED" then
 		SteakMinimapZones = SteakMinimapZones or {}
-	elseif event == "WORLD_MAP_UPDATE" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "WORLD_MAP_NAME_UPDATE" then
+	elseif event == "WORLD_MAP_UPDATE" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "WORLD_MAP_NAME_UPDATE" or event == "ZONE_CHANGED_NEW_AREA" then
 		MapFrame_UpdateTextures()
 		MapFrame_UpdateQuestIcons()
 		--MapFrame_UpdateBlobs()
-	elseif event == "ZONE_CHANGED_NEW_AREA" then
-		MapFrame_UpdateTextures()
-		MapFrame_UpdateQuestIcons()
-		--MapFrame_UpdateBlobs()
+		MapFrame_UpdateHerbNodes()
 	elseif event == "QUEST_LOG_UPDATE" or event == "QUEST_POI_UPDATE" then
 		MapFrame_UpdateQuestIcons()
-		--MapFrame_UpdateBlobs()
-	end	
+		--MapFrame_UpdateBlobs()		
+	end
 end
 
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -488,6 +611,8 @@ f:RegisterEvent("ZONE_CHANGED_INDOORS")
 
 f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 f:RegisterEvent("WORLD_MAP_UPDATE")
+
+--f:RegisterEvent("ADDON_LOADED")
 
 f:RegisterEvent("CLOSE_WORLD_MAP");
 f:RegisterEvent("WORLD_MAP_NAME_UPDATE");
@@ -510,6 +635,17 @@ f:SetScript("OnUpdate", function(self, elapsed)
 		Minimap:Hide()
 
 		return
+	end
+
+	local mapFileName = GetMapInfo()
+
+	if mapFileName and zoneOverride[mapFileName] then
+		local override = zoneOverride[mapFileName]
+		local zoom = override.Minimap.Zoom or 1
+		local size = override.Minimap.Size or {width = 100, height = 100}
+
+		Minimap:SetZoom(zoom)
+		Minimap:SetSize(size.width, size.height)
 	end
 
 	PlayerArrow:Show()
