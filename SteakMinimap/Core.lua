@@ -186,20 +186,24 @@ end
 
 local UnitDots = {}
 local function GetUnitDot(index)
-    if not UnitDots[index] then
-        local dot = CreateFrame("Frame", "MapFrameUnitDot"..index, MapFrameSC)
-        dot:SetSize(16, 16)
+	if not UnitDots[index] then
+		local dot = CreateFrame("Frame", "MapFrameUnitDot"..index, MapFrameSC)
+
+		dot:SetSize(16, 16)
         
-        local tex = dot:CreateTexture(nil, "OVERLAY")
-        tex:SetAllPoints()
-        -- Using the standard "blip" texture or a simple circle
-        tex:SetTexture("Interface\\Minimap\\ObjectIcons")
-        tex:SetTexCoord(0.5, 0.75, 0, 0.25) -- This is the standard "Party Member" dot
-        
-        dot.tex = tex
-        UnitDots[index] = dot
-    end
-    return UnitDots[index]
+		local tex = dot:CreateTexture(nil, "OVERLAY")
+
+		tex:SetAllPoints()
+		--tex:SetTexture("Interface\\Minimap\\ObjectIcons")
+		--tex:SetTexCoord(0.5, 0.75, 0, 0.25) -- This is the standard "Party Member" dot
+		tex:SetTexture("Interface\\Buttons\\WHITE8x8")
+		--tex:SetMask("Interface\\Minimap\\UI-Minimap-Background")
+
+		dot.tex = tex
+		UnitDots[index] = dot
+	end
+
+	return UnitDots[index]
 end
 
 local poiDots = {}
@@ -300,6 +304,71 @@ local function MapFrame_UpdateQuestIcons()
         end
     end
 end
+
+local function UpdateCorpseOnMap()
+	local x, y = GetCorpseMapPosition()
+
+	if not x or not y or ( x == 0 and y == 0 ) then
+		MapFrameSC.corpseIcon:Hide()
+		return
+	end
+
+	local w = MapFrameSC:GetWidth()
+	local h = MapFrameSC:GetHeight()
+
+	--local px, py = GetCorpseMapPosition()
+
+	--if math.sqrt(((px-x)*(px-x))+((py-y)*(py-y))) < 0.02 then
+	--	MapFrameSC.corpseIcon:Hide()
+	--else
+		MapFrameSC.corpseIcon:ClearAllPoints()
+		MapFrameSC.corpseIcon:SetPoint("CENTER", MapFrameSC, "TOPLEFT", x * w, -y * h)
+		MapFrameSC.corpseIcon:Show()
+	--end
+end
+
+local corpseIcon = CreateFrame("Frame", "SteakCorpseIcon", MapFrameSC, "WorldMapCorpseTemplate,SecureHandlerStateTemplate")
+MapFrameSC.corpseIcon = corpseIcon
+RegisterStateDriver(corpseIcon, "visibility", "[@player,nodead] hide; show")
+
+--local corpseIcon = CreateFrame("Frame", nil, MapFrameSC, "WorldMapCorpseTemplate")
+--[[
+local corpseIcon = CreateFrame("Frame", nil, MapFrameSC)
+corpseIcon:SetSize(16, 16)
+corpseIcon:Hide()
+corpseIcon.glow = corpseIcon:CreateTexture(nil, "BACKGROUND")
+corpseIcon.glow:SetSize(32, 32)
+corpseIcon.glow:SetTexture("Interface\\Cooldown\\star4")
+corpseIcon.glow:SetVertexColor(0, 0, 0)
+corpseIcon.glow:SetBlendMode("ADD")
+corpseIcon.glow:SetAlpha(0.8)
+corpseIcon.glow:SetPoint("CENTER", corpseIcon, "CENTER", 0, 0)
+corpseIcon.texture = corpseIcon:CreateTexture(nil, "OVERLAY")
+corpseIcon.texture:SetAllPoints()
+corpseIcon.texture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Skull")
+MapFrameSC.corpseIcon = corpseIcon
+]]
+
+--[[
+local corpseIcon = MapFrameSC:CreateTexture(nil, "OVERLAY")
+corpseIcon:SetSize(24, 24)
+corpseIcon:Hide()
+corpseIcon:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Skull")
+MapFrameSC.corpseIcon = corpseIcon
+]]
+
+--[[
+local corpseIcon = MapFrameSC:CreateTexture(nil, "OVERLAY")
+corpseIcon:SetSize(24, 24)
+--corpseIcon:SetTexture("Interface\Minimap\POIIcons")
+--corpseIcon:SetTexCoord(0.56640625, 0.6328125, 0.00390625, 0.0703125)
+--corpseIcon:SetTexture("Interface\\Minimap\\MinimapDeadArrow")
+--corpseIcon:SetTexture("Interface\\LootFrame\\LootPanel-Icon")
+corpseIcon:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Skull")
+
+corpseIcon:Hide()
+MapFrameSC.corpseIcon = corpseIcon
+]]
 
 --[[
 local function MapFrame_UpdateHerbNodes()
@@ -599,6 +668,10 @@ local function OnEvent(self, event, ...)
 	elseif event == "QUEST_LOG_UPDATE" or event == "QUEST_POI_UPDATE" then
 		MapFrame_UpdateQuestIcons()
 		--MapFrame_UpdateBlobs()		
+	end
+
+	if event == "PLAYER_DEAD" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" or event == "MAP_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
+		UpdateCorpseOnMap()
 	end
 end
 
