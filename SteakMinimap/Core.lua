@@ -66,10 +66,33 @@ sc:Show()
 
 f:Show()
 
+local poiDots = {}
+local questDots = {}
+local questBlobs = {}
+local fpDots = {}
+
 local zoneOverride = {
+	["Barrens"] = {
+		["Minimap"] = {
+			["Size"] = { width = 40, height = 40 },
+			["Zoom"] = 1
+		}
+	},
+	["Desolace"] = {
+		["Minimap"] = {
+			["Size"] = { width = 90, height = 90 },
+			["Zoom"] = 1
+		}
+	},
 	["IcecrownGlacier"] = {
 		["Minimap"] = {
 			["Size"] = { width = 70, height = 70 },
+			["Zoom"] = 1
+		}
+	},
+	["LakeWintergrasp"] = {
+		["Minimap"] = {
+			["Size"] = { width = 140, height = 140 },
 			["Zoom"] = 1
 		}
 	},
@@ -77,6 +100,18 @@ local zoneOverride = {
 		["Minimap"] = {
 			["Size"] = { width = 75, height = 75 },
 			["Zoom"] = 3
+		}
+	},
+	["SholazarBasin"] = {
+		["Minimap"] = {
+			["Size"] = { width = 90, height = 90 },
+			["Zoom"] = 1
+		}
+	},
+	["Tanaris"] = {
+		["Minimap"] = {
+			["Size"] = { width = 59, height = 59 },
+			["Zoom"] = 1
 		}
 	}
 }
@@ -111,37 +146,9 @@ local blobColors = {
     {r=128, g=128, b=0,   a=100}  -- 25: Olive
 }
 
-local questBlobs = {}
-local function CreateBlob(index, questID)
-	if not questBlobs[index] then
-		local BlobFrame = CreateFrame("QuestPOIFrame", "MapBlobFrame_"..index, MapFrameSC)
-
-		BlobFrame:SetPoint("TOPLEFT", MapFrameSC, "TOPLEFT", 0, 0)
-		BlobFrame:SetSize(1002, 662)
-		--BlobFrame:SetAllPoints(MapFrameSC)
-		BlobFrame:Show()
-
-		BlobFrame:SetFillTexture("Interface\\WorldMap\\UI-QuestBlob-Inside")
-		BlobFrame:SetBorderTexture("Interface\\WorldMap\\UI-QuestBlob-Outside")
-
-		BlobFrame:SetFillAlpha(128)
-		BlobFrame:SetBorderAlpha(255)
-		BlobFrame:SetBorderScalar(1.0) -- Thickness of the border
-
-		--BlobFrame:SetFillColor(blobColors[index].r, blobColors[index].g, blobColors[index].b, blobColors[index].a)
-		--BlobFrame:SetBorderColor(blobColors[index].r, blobColors[index].g, blobColors[index].b, blobColors[index].a+100)
-
-		questBlobs[index] = BlobFrame
-	end
-
-	return questBlobs[index]
-end
-
 local PlayerArrow = CreateFrame("Frame", "MapFramePlayerArrowFrame", MapFrame)
---local PlayerArrow = CreateFrame("Frame", "MapFramePlayerArrowFrame", MapFrameSC)
 PlayerArrow:SetSize(64, 64)
 PlayerArrow:SetPoint("CENTER", MapFrame, "CENTER", 0, 0)
---PlayerArrow:SetFrameLevel(MapFrameSC:GetFrameLevel() + 25)
 
 PlayerArrow.texture = PlayerArrow:CreateTexture(nil, "OVERLAY")		
 PlayerArrow.texture:SetAllPoints(PlayerArrow)
@@ -164,49 +171,6 @@ local function IsInCity()
     return false 
 end
 
-local function MapFrame_UpdateBlobs()
-    --MapBlobFrame:Update() -- Internal engine refresh
-    for _, blob in ipairs(questBlobs) do blob:Hide() end
-
-    for i = 1, GetNumQuestLogEntries() do
-        --local _, _, _, _, _, isHeader, _, _, questID = GetQuestLogTitle(i)
-        local questTitle, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID = GetQuestLogTitle(i)
-        if not isHeader and questID then
-            -- Draw the blob regardless of whether it has a specific POI icon
-
-            --MapBlobFrame:DrawQuestBlob(questID, true)
-
-            local BlobFrame = questBlobs[i] or CreateBlob(i)
-
-            --BlobFrame:DrawQuestBlob(questID, isComplete)
-            BlobFrame:DrawQuestBlob(questID, not isComplete)
-        end
-    end
-end
-
-local UnitDots = {}
-local function GetUnitDot(index)
-	if not UnitDots[index] then
-		local dot = CreateFrame("Frame", "MapFrameUnitDot"..index, MapFrameSC)
-
-		dot:SetSize(16, 16)
-        
-		local tex = dot:CreateTexture(nil, "OVERLAY")
-
-		tex:SetAllPoints()
-		--tex:SetTexture("Interface\\Minimap\\ObjectIcons")
-		--tex:SetTexCoord(0.5, 0.75, 0, 0.25) -- This is the standard "Party Member" dot
-		tex:SetTexture("Interface\\Buttons\\WHITE8x8")
-		--tex:SetMask("Interface\\Minimap\\UI-Minimap-Background")
-
-		dot.tex = tex
-		UnitDots[index] = dot
-	end
-
-	return UnitDots[index]
-end
-
-local poiDots = {}
 local function CreatePOI(index)
 	if not poiDots[index] then
 		local dot = CreateFrame("Button", "MapFramePOI"..index, MapFrameSC)
@@ -230,79 +194,131 @@ local function CreatePOI(index)
 end
 
 local function MapFrame_UpdateQuestIcons()
-    local mapW = MapFrameSC:GetWidth()
-    local mapH = MapFrameSC:GetHeight()
+	--if not WorldMapFrame:IsShown() then SetMapToCurrentZone() end
 
-    local children = MapFrameSC:GetChildren()
+	--WorldMapFrame_Update()
 
-    if children and #children > 0 then
-    	for _, child in ipairs(children) do
-    		if child:GetName():strsub(1, 15) == "MapFrameSC_POI_" then child:Hide() end
-    	end
-    end
+	local mapW = MapFrameSC:GetWidth()
+	local mapH = MapFrameSC:GetHeight()
 
-    --for _, child in ipairs({MapFrameSC:GetChildren()}) do
-    --	if strsub(child:GetName(), 1, 15) == "MapFrameSC_POI_" then child:Hide() end
-    --end
+	for _, poi in ipairs(questDots) do poi:Hide() end
+	for _, blob in ipairs(questBlobs) do blob:Hide() end
+	
+	local index = 1
+	
+	for i=1, GetNumQuestLogEntries() do
+		local poi = questDots[i]
+		
+		if not poi then
+			poi = CreateFrame("Frame", nil, MapFrameSC)
+			
+			poi:SetSize(24, 24)
+			poi:SetFrameLevel(MapFrameSC:GetFrameLevel() + 5)
+			
+			local tex = poi:CreateTexture(nil, "BACKGROUND")
+			tex:SetAllPoints(poi)
+			tex:SetTexture("Interface\\WorldMap\\UI-QuestPoi-NumberIcons.tga")
+			tex:SetTexCoord(0.875, 1, 0.875, 1)
+			poi.tex = tex
+			
+			local num = poi:CreateFontString(nil, "OVERLAY")
+			num:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINE")
+			num:SetPoint("CENTER", poi, "CENTER", 0, 0)
+			num:SetTextColor(1, 1, 0)
+			poi.num = num
 
-    for i = 1, GetNumQuestLogEntries() do
-        --local questTitle, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID = GetQuestLogTitle(i)
-        local _, _, _, _, isHeader, _, isComplete, _, questID = GetQuestLogTitle(i)
-        
-        if not isHeader then
-            local _, posX, posY, objective = QuestPOIGetIconInfo(questID)
+			poi:EnableMouse(true)
 
-            if posX and posX > 0 then
-                --local name = "MapFrameSC_POI_" .. questID
-                local name = "MapFrameSC_POI_"
-                local btn = _G[name]
+			poi:SetScript("OnEnter", function(self)
+				if self.questID then
+					for i=1, GetNumQuestLogEntries() do
+						local name, _, _, _, _, _, _, _, questID = GetQuestLogTitle(i)
+						
+						if questID == self.questID then
+							GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+							GameTooltip:SetText(name)
+							for j=1,GetNumQuestLeaderBoards(i) do
+								local t, _, finished = GetQuestLogLeaderBoard(j, i)
+								if finished then
+									GameTooltip:AddLine(("|cff00ff00%s|r"):format(t))
+								else
+									GameTooltip:AddLine(("|cffffffff%s|r"):format(t))
+								end
+							end
+							GameTooltip:Show()
+						end
+					end
+				end
+			end)
+   
+   			poi:SetScript("OnLeave", function(self)
+   				GameTooltip:Hide()
+   			end)
+			
+			questDots[i] = poi
+		end
+		
+		local _, _, _, _, isHeader, _, isComplete, _, questID = GetQuestLogTitle(i)
+		
+		if not isHeader then
+			local _, posX, posY, objective = QuestPOIGetIconInfo(questID)
+			--if isComplete then posX, posY = GetQuestLogCompletionLocation(i) end
 
-                if isComplete then
-                	--name = name.."Complete_"..i
-                	name = name.."Complete_"..questID
-                else
-                	--name = name.."Number_"..i
-                	name = name.."Number_"..questID
-                end
+			if posX and posX > 0 then
+				--[[
+				if isComplete then
+					poi.num:SetText("?")
+				else
+					poi.num:SetText(index)
+				end
+				]]
+				
+				if not isComplete then
+					local finalX = posX * mapW
+					local finalY = -posY * mapH
+				
+					poi:ClearAllPoints()
+					poi:SetPoint("CENTER", MapFrameSC, "TOPLEFT", finalX, finalY)
 
-                if not btn then
-					if ( isComplete ) then
-                    	    btn = CreateFrame("Button", name, MapFrameSC, "QuestPOICompletedTemplate");
-                	else
-                        	btn = CreateFrame("Button", name, MapFrameSC, "QuestPOITemplate");
-                	end
+					poi.questID = questID
+					poi.num:SetText(index)
 
-                	--btn:SetScript("OnEnter", function(self) self.grow = true; end)
-					--btn:SetScript("OnLeave", function(self) self.grow = false; end)
-					btn:SetScript("OnEnter", nil)
-					btn:SetScript("OnLeave", nil)
-					btn:SetScript("OnClick", nil)
-					btn:EnableMouse(false)
-                end
+					poi:Show()
+					index = index + 1
+				end
 
-                local finalX = posX * mapW
-                local finalY = -posY * mapH
+				--[[
+				local questBlob = questBlobs[i]
+				
+				if not questBlob then
+					questBlob = CreateFrame("QuestPOIFrame", "MapBlobFrame_"..i, MapFrameSC)
 
-                btn:SetParent(MapFrameSC)
-                btn:ClearAllPoints()
-                btn:SetPoint("CENTER", MapFrameSC, "TOPLEFT", finalX, finalY)
-                btn:SetFrameLevel(MapFrameSC:GetFrameLevel() + 5)
+					--questBlob:SetPoint("TOPLEFT", MapFrameSC, "TOPLEFT", 0, 0)
+					--questBlob:SetSize(MapFrameSC:GetSize())
+					questBlob:SetAllPoints(MapFrameSC)
+					questBlob:Show()
 
-                -- 6. Set the Icon (Numeric or Question Mark)
-                --if isComplete then
-                --    QuestPOI_SelectButtonType(btn, QUEST_POI_COMPLETE_SWAP, i)
-                --else
-                --    QuestPOI_SelectButtonType(btn, QUEST_POI_NUMERIC, i)
-                --end
+					questBlob:SetFillTexture("Interface\\WorldMap\\UI-QuestBlob-Inside")
+					questBlob:SetBorderTexture("Interface\\WorldMap\\UI-QuestBlob-Outside")
 
-				local yOffset = 0.5 + floor(i / QUEST_POI_ICONS_PER_ROW) * QUEST_POI_ICON_SIZE;
-				local xOffset = mod(i, QUEST_POI_ICONS_PER_ROW) * QUEST_POI_ICON_SIZE;
-				if btn.number then btn.number:SetTexCoord(xOffset, xOffset + QUEST_POI_ICON_SIZE, yOffset, yOffset + QUEST_POI_ICON_SIZE); end
+					questBlob:SetFillAlpha(128)
+					questBlob:SetBorderAlpha(255)
+					questBlob:SetBorderScalar(1.0) -- Thickness of the border
 
-                btn:Show()
-            end
-        end
-    end
+					--questBlob:SetFillColor(blobColors[i].r, blobColors[i].g, blobColors[i].b, blobColors[i].a)
+					--questBlob:SetBorderColor(blobColors[i].r, blobColors[i].g, blobColors[i].b, blobColors[i].a+100)
+
+					questBlobs[i] = blobFrame
+				end
+				
+				questBlob:DrawQuestBlob(questID, not isComplete)
+				]]
+				
+				--if not isComplete then poi:Show() end
+				--index = index + 1
+			end
+		end
+	end
 end
 
 local function UpdateCorpseOnMap()
@@ -327,150 +343,10 @@ local function UpdateCorpseOnMap()
 	--end
 end
 
-local corpseIcon = CreateFrame("Frame", "SteakCorpseIcon", MapFrameSC, "WorldMapCorpseTemplate,SecureHandlerStateTemplate")
+--local corpseIcon = CreateFrame("Frame", "SteakCorpseIcon", MapFrameSC, "WorldMapCorpseTemplate,SecureHandlerStateTemplate")
+local corpseIcon = CreateFrame("Frame", "SteakCorpseIcon", MapFrameSC, "WorldMapCorpseTemplate")
 MapFrameSC.corpseIcon = corpseIcon
-RegisterStateDriver(corpseIcon, "visibility", "[@player,nodead] hide; show")
-
---local corpseIcon = CreateFrame("Frame", nil, MapFrameSC, "WorldMapCorpseTemplate")
---[[
-local corpseIcon = CreateFrame("Frame", nil, MapFrameSC)
-corpseIcon:SetSize(16, 16)
-corpseIcon:Hide()
-corpseIcon.glow = corpseIcon:CreateTexture(nil, "BACKGROUND")
-corpseIcon.glow:SetSize(32, 32)
-corpseIcon.glow:SetTexture("Interface\\Cooldown\\star4")
-corpseIcon.glow:SetVertexColor(0, 0, 0)
-corpseIcon.glow:SetBlendMode("ADD")
-corpseIcon.glow:SetAlpha(0.8)
-corpseIcon.glow:SetPoint("CENTER", corpseIcon, "CENTER", 0, 0)
-corpseIcon.texture = corpseIcon:CreateTexture(nil, "OVERLAY")
-corpseIcon.texture:SetAllPoints()
-corpseIcon.texture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Skull")
-MapFrameSC.corpseIcon = corpseIcon
-]]
-
---[[
-local corpseIcon = MapFrameSC:CreateTexture(nil, "OVERLAY")
-corpseIcon:SetSize(24, 24)
-corpseIcon:Hide()
-corpseIcon:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Skull")
-MapFrameSC.corpseIcon = corpseIcon
-]]
-
---[[
-local corpseIcon = MapFrameSC:CreateTexture(nil, "OVERLAY")
-corpseIcon:SetSize(24, 24)
---corpseIcon:SetTexture("Interface\Minimap\POIIcons")
---corpseIcon:SetTexCoord(0.56640625, 0.6328125, 0.00390625, 0.0703125)
---corpseIcon:SetTexture("Interface\\Minimap\\MinimapDeadArrow")
---corpseIcon:SetTexture("Interface\\LootFrame\\LootPanel-Icon")
-corpseIcon:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Skull")
-
-corpseIcon:Hide()
-MapFrameSC.corpseIcon = corpseIcon
-]]
-
---[[
-local function MapFrame_UpdateHerbNodes()
-    if not GatherMate2HerbDB then return end
-
-    local mapFile = GetMapInfo()
-    if not mapFile then return end
-
-    local zoneID = GatherMate2.zoneData[mapFile]
-    if not zoneID then return end
-
-    local mapW = MapFrameSC:GetWidth()
-    local mapH = MapFrameSC:GetHeight()
-
-    -- Hide old nodes
-    for _, dot in pairs(herbNodes) do dot:Hide() end
-
-    local index = 1
-    for coord, herbType in pairs(GatherMate2HerbDB[zoneID] or {}) do
-        local x = floor(coord / 10000) / 10000
-        local y = (coord % 10000) / 10000
-
-        local dot = GetHerbNodeDot(index)
-
-        local posX = x * mapW
-        local posY = -y * mapH
-
-        dot:ClearAllPoints()
-        dot:SetPoint("CENTER", MapFrameSC, "TOPLEFT", posX, posY)
-        dot:Show()
-
-        index = index + 1
-    end
-end
-]]
-
-local gmHerbDots = {}
-
-local function GetGMHerbDot(index)
-    if not gmHerbDots[index] then
-        local dot = CreateFrame("Frame", "MapFrameGMHerb"..index, MapFrameSC)
-        dot:SetSize(16, 16)
-
-        --local glow = dot:CreateTexture(nil, "BACKGROUND")
-        --glow:SetPoint("CENTER")
-        --glow:SetSize(32, 32)
-	--glow:SetTexture("Interface\\Cooldown\\star4")
-        --glow:SetVertexColor(0, 0, 0, 0.8)
-        --glow:SetBlendMode("ADD")
-        --dot.glow = glow
-
-        local tex = dot:CreateTexture(nil, "OVERLAY")
-        tex:SetAllPoints()
-        dot.tex = tex
-        gmHerbDots[index] = dot
-    end
-
-    return gmHerbDots[index]
-end
-
-local function MapFrame_UpdateHerbNodes()
-    if not GatherMateHerbDB then return end
-
-    local zoneName = GetZoneText()
-    if not zoneName then return end
-
-    local zoneInfo = GatherMate.zoneData[zoneName]
-    if not zoneInfo then return end
-
-    local zoneID = zoneInfo[3]
-    if not zoneID then return end
-
-    local herbData = GatherMateHerbDB[zoneID]
-    if not herbData then return end
-
-    local mapW = MapFrameSC:GetWidth()
-    local mapH = MapFrameSC:GetHeight()
-
-    for _, dot in pairs(gmHerbDots) do dot:Hide() end
-
-    local index = 1
-    for coord, herbType in pairs(herbData) do
-        local x = floor(coord / 10000) / 10000
-        local y = (coord % 10000) / 10000
-
-        local dot = GetGMHerbDot(index)
-        dot:ClearAllPoints()
-        dot:SetPoint("CENTER", MapFrameSC, "TOPLEFT", x * mapW, -y * mapH)
-
-	local icon = GatherMate.nodeTextures["Herb Gathering"][herbType]
-
-	if icon then
-		dot.tex:SetTexture(icon)
-	else
-		dot.tex:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-	end
-
-        dot:Show()
-
-        index = index + 1
-    end
-end
+--RegisterStateDriver(corpseIcon, "visibility", "[@player,nodead] hide; show")
 
 function MoveMinimapButtons()
 	local frames = {}
@@ -485,8 +361,11 @@ function MoveMinimapButtons()
 			v:SetPoint("TOPLEFT", MapFrame, "TOPLEFT", 0, 0)
 		elseif v:GetName() == nil or tContains(hideThese, v:GetName()) then
 			v:Hide()
+		elseif v:GetName() == "MinimapPing" then
+			v:SetParent(MapFrameSC)
 		elseif v:GetName() ~= "MiniMapTracking" then
-			tinsert(frames, v:GetName())			
+			tinsert(frames, v:GetName())
+			--print("Minimap", v:GetName())	
 		end
 	end
 
@@ -501,6 +380,7 @@ function MoveMinimapButtons()
 			v:Hide()
 		else
 			tinsert(frames, v:GetName())
+			--print("MinimapCluster", v:GetName())
 		end
 	end
 
@@ -515,6 +395,7 @@ function MoveMinimapButtons()
 			v:Hide()
 		else
 			tinsert(frames, v:GetName())
+			--print("MinimapBackdrop", v:GetName())
 		end
 	end
 
@@ -550,6 +431,36 @@ function MoveMinimapButtons()
 	WatchFrame:SetParent(UIParent)
 	WatchFrame:ClearAllPoints()
 	WatchFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -50, -200)
+end
+
+function MapFrame_UpdateFlightPaths()
+	for _, poi in ipairs(fpDots) do poi:Hide() end
+	
+	local mapFilename = GetMapInfo()
+	
+	if not mapFilename or not SteakFlightPaths[mapFilename] then return end
+
+	local mapW, mapH = MapFrameSC:GetSize()
+	
+	local index = 1
+	for _, data in pairs(SteakFlightPaths[mapFilename]) do
+		local dot = fpDots[index]
+		
+		if not dot then
+			dot = CreateFrame("Frame", nil, MapFrameSC)
+			dot:SetSize(16, 16)
+			local tex = dot:CreateTexture(nil, "BACKGROUND")
+			tex:SetAllPoints(dot)
+			tex:SetTexture("Interface\\TaxiFrame\\UI-Taxi-Icon-White")
+			dot.tex = tex
+			fpDots[index] = dot
+		end
+		
+		dot:ClearAllPoints()
+		dot:SetPoint("CENTER", MapFrameSC, "TOPLEFT", data.x * mapW, -data.y * mapH)
+		dot:Show()
+		index = index + 1
+	end
 end
 
 function MapFrame_UpdateTextures()
@@ -642,9 +553,6 @@ local function OnEvent(self, event, ...)
 		Minimap:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
 		Minimap:SetParent(MapFrameSC)
 		Minimap:SetSize(150, 150)
-		--Minimap:SetSize(80.882352941176, 80.882352941176)
-		--Minimap:SetSize(165, 165)
-		--Minimap:SetSize(220, 220)
 		TimeManagerClockButton:Hide()
 		MinimapCluster:ClearAllPoints()
 		MinimapCluster:SetPoint("TOPLEFT", UIParent, "TOPRIGHT", 0, 0)
@@ -655,27 +563,122 @@ local function OnEvent(self, event, ...)
 		MoveMinimapButtons()
 		Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8X8")
 		self:Show()
+		
+		--[[
+		local btn = CreateFrame("Button", "SteakMapToggle", UIParent)
+		btn:SetPoint("RIGHT", UIParent, "LEFT", -1000, 0)
+		btn:SetScript("OnClick", function(self)
+			if InCombatLockdown() then return end
+			
+			if not MapIsShown then
+				f:ClearAllPoints()
+				f:SetPoint("CENTER", UIParent, "CENTER", 0, 20)
+				f:SetSize(MAPW, MAPH)
+				MapIsShown = true
+			else
+				f:ClearAllPoints()
+				f:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 20)
+				f:SetSize(MMAPW, MMAPH)
+				MapIsShown = nil
+			end
+		end)
+		
+		SetOverrideBindingClick(btn, true, "m", btn:GetName(), "LeftButton")
+		]]
+		
+		--[[
+		WORLDMAP_SETTINGS.size = WORLDMAP_WINDOWED_SIZE
+		
+		ShowUIPanel(WorldMapFrame)
+		WorldMapFrame:ClearAllPoints()
+		WorldMapFrame:SetClampedToScreen(false)
+		WorldMapFrame:SetPoint("RIGHT", UIParent, "LEFT", -1000, 0)
+
+		local btn = CreateFrame("Button", "SteakMapToggle", UIParent)		
+		btn:SetPoint("RIGHT", UIParent, "LEFT", -1000, 0)
+		btn:SetScript("OnClick", function(self)
+			if not MapIsShown then
+				if not WorldMapFrame:IsShown() then
+					WORLDMAP_SETTINGS.size = WORLDMAP_WINDOWED_SIZE
+					ShowUIPanel(WorldMapFrame)
+				end
+				WorldMapFrame:ClearAllPoints()
+				WorldMapFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+				MapIsShown = true
+			else
+				WorldMapFrame:ClearAllPoints()
+				WorldMapFrame:SetClampedToScreen(false)
+				WorldMapFrame:SetPoint("RIGHT", UIParent, "LEFT", -1000, 0)
+				MapIsShown = nil
+			end
+		end)
+
+		SetOverrideBindingClick(btn, true, "m", btn:GetName(), "LeftButton")
+
+		WorldMapFrame:HookScript("OnHide", function(self)
+			WORLDMAP_SETTINGS.size = WORLDMAP_WINDOWED_SIZE
+			ShowUIPanel(WorldMapFrame)
+			WorldMapFrame:ClearAllPoints()
+			WorldMapFrame:SetClampedToScreen(false)
+			WorldMapFrame:SetPoint("RIGHT", UIParent, "LEFT", -1000, 0)
+			MapIsShown = nil
+		end)
+		]]
 
 		MapFrame_UpdateQuestIcons()
-		--MapFrame_UpdateBlobs()
 	elseif event == "VARIABLES_LOADED" then
 		SteakMinimapZones = SteakMinimapZones or {}
+		SteakFlightPaths = SteakFlightPaths or {}
 	elseif event == "WORLD_MAP_UPDATE" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "WORLD_MAP_NAME_UPDATE" or event == "ZONE_CHANGED_NEW_AREA" then
 		MapFrame_UpdateTextures()
 		MapFrame_UpdateQuestIcons()
-		--MapFrame_UpdateBlobs()
-		MapFrame_UpdateHerbNodes()
-	elseif event == "QUEST_LOG_UPDATE" or event == "QUEST_POI_UPDATE" then
+		MapFrame_UpdateFlightPaths()
+	elseif event == "QUEST_LOG_UPDATE" or event == "QUEST_POI_UPDATE" or event == "UNIT_QUEST_LOG_CHANGED" then
+		--if not WorldMapFrame:IsShown() then SetMapToCurrentZone() end
+   
+   		--[[
+		if not InCombatLockdown() and not WorldMapFrame:IsShown() then
+			local mapSize = WORLDMAP_SETTINGS.size
+			WORLDMAP_SETTINGS.size = WORLDMAP_WINDOWED_SIZE
+			ShowUIPanel(WorldMapFrame)
+			WorldMapFrame:ClearAllPoints()
+			WorldMapFrame:SetClampedToScreen(false)
+			WorldMapFrame:SetPoint("RIGHT", UIParent, "LEFT", -1000, 0)
+			HideUIPanel(WorldMapFrame)
+		end
+		]]
+		
 		MapFrame_UpdateQuestIcons()
-		--MapFrame_UpdateBlobs()		
+	elseif event == "TAXIMAP_OPENED" then
+		local x, y = GetPlayerMapPosition("player")
+		local mapFilename = GetMapInfo()
+		
+		if x > 0 and y > 0 and mapFilename then
+			SteakFlightPaths[mapFilename] = SteakFlightPaths[mapFilename] or {}
+			
+			SteakFlightPaths[mapFilename][("%.0f,%.0f"):format(x * 100, y * 100)] = { x = x, y = y }
+			
+			MapFrame_UpdateFlightPaths()
+		end
+	elseif event == "MINIMAP_PING" then
+		--print(...)
+		local unit, x, y = ...
 	end
 
-	if event == "PLAYER_DEAD" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" or event == "MAP_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
+	if event == "PLAYER_DEAD" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" or event == "MAP_UPDATE" or event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_GHOST" then
+		--print(event, GetCorpseMapPosition())
 		UpdateCorpseOnMap()
 	end
+	
+	UpdateCorpseOnMap()
+	--MapFrame_UpdateQuestIcons()
 end
 
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("PLAYER_ALIVE")
+f:RegisterEvent("PLAYER_UNGHOST")
+f:RegisterEvent("PLAYER_GHOST")
+f:RegisterEvent("PLAYER_DEAD")
 f:RegisterEvent("VARIABLES_LOADED")
 
 f:RegisterEvent("WORLD_MAP_UPDATE");
@@ -687,15 +690,18 @@ f:RegisterEvent("WORLD_MAP_UPDATE")
 
 --f:RegisterEvent("ADDON_LOADED")
 
-f:RegisterEvent("CLOSE_WORLD_MAP");
-f:RegisterEvent("WORLD_MAP_NAME_UPDATE");
---f:RegisterEvent("PARTY_MEMBERS_CHANGED");
---f:RegisterEvent("RAID_ROSTER_UPDATE");
---f:RegisterEvent("DISPLAY_SIZE_CHANGED");
-f:RegisterEvent("QUEST_LOG_UPDATE");
-f:RegisterEvent("QUEST_POI_UPDATE");
---f:RegisterEvent("SKILL_LINES_CHANGED");
---f:RegisterEvent("REQUEST_CEMETERY_LIST_RESPONSE");
+f:RegisterEvent("CLOSE_WORLD_MAP")
+f:RegisterEvent("WORLD_MAP_NAME_UPDATE")
+--f:RegisterEvent("PARTY_MEMBERS_CHANGED")
+--f:RegisterEvent("RAID_ROSTER_UPDATE")
+--f:RegisterEvent("DISPLAY_SIZE_CHANGED")
+f:RegisterEvent("QUEST_LOG_UPDATE")
+f:RegisterEvent("QUEST_POI_UPDATE")
+f:RegisterEvent("UNIT_QUEST_LOG_CHANGED")
+f:RegisterEvent("TAXIMAP_OPENED")
+f:RegisterEvent("MINIMAP_PING")
+--f:RegisterEvent("SKILL_LINES_CHANGED")
+--f:RegisterEvent("REQUEST_CEMETERY_LIST_RESPONSE")
 
 f:SetScript("OnEvent", OnEvent)
 f:SetScript("OnUpdate", function(self, elapsed)
@@ -724,6 +730,8 @@ f:SetScript("OnUpdate", function(self, elapsed)
 	PlayerArrow:Show()
 	Minimap:Show()
 
+	UpdateCorpseOnMap()
+
 	local facing = GetPlayerFacing()
 
 	if facing then PlayerArrow.texture:SetRotation(facing) end
@@ -739,125 +747,23 @@ f:SetScript("OnUpdate", function(self, elapsed)
 
 	Minimap:ClearAllPoints()
 	Minimap:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
-	--PlayerArrow:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
 
 	local currentScale = MapFrameSC:GetScale()
-    local scrollX = ((unitX * mapWidth * currentScale) - (self:GetWidth() / 2)) / currentScale
-    local scrollY = ((unitY * mapHeight * currentScale) - (self:GetHeight() / 2)) / currentScale
+	local scrollX = ((unitX * mapWidth * currentScale) - (self:GetWidth() / 2)) / currentScale
+	local scrollY = ((unitY * mapHeight * currentScale) - (self:GetHeight() / 2)) / currentScale
 
-    self:SetHorizontalScroll(scrollX)
-    self:SetVerticalScroll(scrollY)
+	self:SetHorizontalScroll(scrollX)
+	self:SetVerticalScroll(scrollY)
 
-    self.dotTimer = (self.dotTimer or 0) + elapsed
+	self.coordTimer = (self.coordTimer or 0) + elapsed
 
-    if self.dotTimer >= 0.1 then
-    	local prefix = (GetNumRaidMembers() > 0) and "raid" or "party"
-    	local count = (prefix == "raid") and GetNumRaidMembers() or GetNumPartyMembers()
+	if self.coordTimer >= 0.1 then
+		coordText:SetText(string.format("%.1f, %.1f", unitX * 100, unitY * 100))
+		coordFrame:SetWidth(coordText:GetWidth()+10)
 
-    	for _, dot in pairs(UnitDots) do dot:Hide() end
-
-    	for i=1,count do
-    		local unit = prefix..i
-
-    		if not UnitIsUnit(unit, "player") then
-    			local uX, uY = GetPlayerMapPosition(unit)
-
-    			if uX > 0 and uY > 0 then
-    				local dot = GetUnitDot(i)
-
-    				local posX = (uX * mapWidth) / MapFrameSC:GetScale()
-    				local posY = (uY * mapHeight) / MapFrameSC:GetScale()
-
-    				dot:ClearAllPoints()
-    				dot:SetPoint("CENTER", MapFrameSC, "TOPLEFT", posX, posY)
-
-				local iconIndex = GetRaidTargetIndex(unit)
-				local isDead = UnitIsDead(unit)
-				local isOffline = not UnitIsConnected(unit)
-
-				if iconIndex then
-					dot.tex:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
-
-					local left = (iconIndex - 1) % 4 * 0.25
-					local right = left + 0.25
-					local top = math.floor((iconIndex - 1) / 4) * 0.25
-					local bottom = top + 0.25
-
-					dot.tex:SetTexCoord(left, right, top, bottom)
-					dot.tex:SetVertexColor(1, 1, 1) -- Keep icons original color
-				elseif isOffline then
-					dot.tex:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
-					dot.tex:SetTexCoord(0.5, 1, 0, 0.5) -- Disconnected icon
-					dot.tex:SetVertexColor(0.5, 0.5, 0.5)
-				elseif isDead then
-					dot.tex:SetTexture("Interface\\TargetingFrame\\UI-TargetofTargetFrame-Flash") 
-					dot.tex:SetTexCoord(0, 1, 0, 1)
-					dot.tex:SetVertexColor(0.2, 0.2, 0.2) -- Very dark for dead
-					--dot.tex:SetVertexColor(0.5, 0.5, 0.5)
-    				else
-					dot.tex:SetTexture("Interface\\Minimap\\ObjectIcons")
-					dot.tex:SetTexCoord(0.5, 0.75, 0, 0.25) -- This is the standard "Party Member" dot
-
-    					local _, class = UnitClass(unit)
-    					local color = RAID_CLASS_COLORS[class] or {r=1, g=1, b=1}
-
-    					dot.tex:SetVertexColor(color.r, color.g, color.b)
-    				end
-
-    				dot:Show()
-    			end
-    		end
-		end
-
-		self.dotTimer = 0
-
-		--self.growTimer = (self.growTimer or 0) + elapsed
-
-		--if self.growTimer >= 0.01 then
-			--[[
-    		local width = MapFrame:GetWidth()
-    		local height = MapFrame:GetHeight()
-
-	    	local scaleX = (500-MMAPW)/2
-    		local scaleY = (500-MMAPH)/2
-
-    		if (self.grow or false) == true then
-	    		if width < 500 then width = width + scaleX end
-    			if width > 500 then width = 500 end
-
-   				if height < 500 then height = height + scaleY end
-   				if height > 500 then height = 500 end
-   			else
-   				if width > MMAPW then width = width - scaleX end
-   				if width < MMAPW then width = MMAPW end
-
-   				if height > MMAPH then height = height - scaleY end
-   				if height < MMAPH then height = MMAPH end
-	   		end
-
-			MapFrame:SetSize(width, height)
-			]]
-	   		--self.growTimer = 0
-	   	--end
-
-		self.coordTimer = (self.coordTimer or 0) + elapsed
-
-		if self.coordTimer >= 0.1 then
-			coordText:SetText(string.format("%.1f, %.1f", unitX * 100, unitY * 100))
-			coordFrame:SetWidth(coordText:GetWidth()+10)
-
-			self.coordTimer = 0
-		end
+		self.coordTimer = 0
 	end
 end)
-
---[[
-local growFrames = { MapFrame, Minimap, MapFrameSC }
-for _, frame in ipairs(growFrames) do
-	frame:SetScript("OnEnter", function(self) MapFrame.grow = true end)
-	frame:SetScript("OnLeave", function(self) MapFrame.grow = false end)
-end
-]]
 
 f:SetScript("OnMouseWheel", function(self, delta)
 	if delta > 0 and MapFrameSC:GetScale() < 2 then

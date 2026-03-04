@@ -5,5 +5,8 @@
 ## Author: SoonBeSteak (https://www.trap-nine.com)
 ## Version: 1.0.5
 ## OptionalDeps: GatherMate
-## SavedVariables: SteakMinimapZones
+## SavedVariables: SteakMinimapZones,SteakFlightPaths
 Core.lua
+QuestLog.lua
+Units.lua
+Herbs.lua
