@@ -12,7 +12,8 @@ local function MapFrame_UpdateQuestIcons()
 	
 	local index = 1
 	
-	for i=1, GetNumQuestLogEntries() do
+	--for i=1, GetNumQuestLogEntries() do
+	for i=GetNumQuestLogEntries(),1,-1 do
 		local poi = questDots[i]
 		
 		if not poi then
