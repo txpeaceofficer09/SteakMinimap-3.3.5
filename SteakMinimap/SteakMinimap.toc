@@ -7,6 +7,10 @@
 ## OptionalDeps: GatherMate
 ## SavedVariables: SteakMinimapZones,SteakFlightPaths
 Core.lua
+buttons.lua
+Corpse.lua
 QuestLog.lua
 Units.lua
 Herbs.lua
+FlightPaths.lua
+QuestIcons.lua

@@ -19,7 +19,7 @@ local function OnUpdate(self, elapsed)
 
 				if not dot then
 					dot = CreateFrame("Frame", nil, MapFrameSC)
-					dot:SetSize(12, 12)
+					dot:SetSize(6, 6)
 
 					local icon = dot:CreateTexture(nil, "BACKGROUND")
 					icon:SetAllPoints(dot)

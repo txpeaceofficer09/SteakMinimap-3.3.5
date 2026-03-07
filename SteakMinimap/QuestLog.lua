@@ -59,9 +59,26 @@ local function OnEvent(self, event, ...)
 				row.obj:SetPoint("TOPLEFT", row.title, "BOTTOMLEFT", 10, -4)
 				row.obj:SetWidth(QUEST_LIST_WIDTH - 30)
 				row.obj:SetJustifyH("LEFT")
+
+				row.icon = row:CreateTexture(nil, "ARTWORK")
+				row.icon:SetSize(24, 24)
+				row.icon:SetTexture("Interface\\WorldMap\\UI-QuestPoi-NumberIcons.tga")
+				row.icon:SetTexCoord(0.875, 1, 0.875, 1)
+				row.icon:SetPoint("RIGHT", row.title, "LEFT", -10, 0)
+
+				row.status = row:CreateFontString(nil, "OVERLAY")
+				row.status:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINE")
+				row.status:SetPoint("CENTER", row.icon, "CENTER", 0, 0)
+				row.status:SetTextColor(1, 1, 0)
                 
 				row.item = CreateItemButton(row)
 				QuestList.rows[rowIndex] = row
+			end
+
+			if isComplete then
+				row.status:SetText("?")
+			else
+				row.status:SetText(rowIndex)
 			end
 
 			if suggestedGroup > 0 then
