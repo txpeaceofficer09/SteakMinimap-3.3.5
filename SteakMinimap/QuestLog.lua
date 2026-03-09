@@ -2,9 +2,19 @@ local QUEST_LIST_WIDTH = (MapFrame and MapFrame:GetWidth() > 0) and MapFrame:Get
 local QUEST_SPACING = 10
 local ITEM_BUTTON_SIZE = 22
 
-local QuestList = CreateFrame("Frame", "SteakQuestList", UIParent)
+local QuestListParent = CreateFrame("ScrollFrame", "SteakQuestListParent", UIParent)
+QuestListParent:SetSize(QUEST_LIST_WIDTH, GetScreenHeight() / 3)
+QuestListParent:SetPoint("BOTTOMLEFT", MapFrame, "TOPLEFT", 0, 10)
+--[[
+QuestListParent.bg = QuestListParent:CreateTexture(nil, "BACKGROUND")
+QuestListParent.bg:SetAllPoints()
+QuestListParent.bg:SetTexture(0, 0, 0, 0.5)
+]]
+
+local QuestList = CreateFrame("Frame", "SteakQuestList", QuestListParent)
 QuestList:SetSize(QUEST_LIST_WIDTH, 1)
-QuestList:SetPoint("BOTTOMLEFT", MapFrame, "TOPLEFT", 0, 10)
+--QuestList:SetPoint("BOTTOMLEFT", MapFrame, "TOPLEFT", 0, 10)
+QuestListParent:SetScrollChild(QuestList)
 QuestList.rows = {}
 
 local function CreateItemButton(parent)
@@ -51,20 +61,22 @@ local function OnEvent(self, event, ...)
                 
 				row.title = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 				row.title:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINED")
-				row.title:SetPoint("TOPLEFT", row, "TOPLEFT", 5, -2)
+				--row.title:SetPoint("TOPLEFT", row, "TOPLEFT", 5, -2)
+				row.title:SetPoint("TOPLEFT", row, "TOPLEFT", 25, -2)
 				row.title:SetJustifyH("LEFT")
                 
 				row.obj = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 				row.obj:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINED")
 				row.obj:SetPoint("TOPLEFT", row.title, "BOTTOMLEFT", 10, -4)
-				row.obj:SetWidth(QUEST_LIST_WIDTH - 30)
+				--row.obj:SetWidth(QUEST_LIST_WIDTH - 30)
+				row.obj:SetWidth(QUEST_LIST_WIDTH - 50)
 				row.obj:SetJustifyH("LEFT")
 
 				row.icon = row:CreateTexture(nil, "ARTWORK")
 				row.icon:SetSize(24, 24)
 				row.icon:SetTexture("Interface\\WorldMap\\UI-QuestPoi-NumberIcons.tga")
 				row.icon:SetTexCoord(0.875, 1, 0.875, 1)
-				row.icon:SetPoint("RIGHT", row.title, "LEFT", -10, 0)
+				row.icon:SetPoint("RIGHT", row.title, "LEFT", -5, 0)
 
 				row.status = row:CreateFontString(nil, "OVERLAY")
 				row.status:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINE")
@@ -75,11 +87,7 @@ local function OnEvent(self, event, ...)
 				QuestList.rows[rowIndex] = row
 			end
 
-			if isComplete then
-				row.status:SetText("?")
-			else
-				row.status:SetText(rowIndex)
-			end
+			row.status:SetText(isComplete and "?" or rowIndex)
 
 			if suggestedGroup > 0 then
 				row.title:SetText(format("|cffffd100[%d]|r %s (Group %d)", level, title, suggestedGroup))
@@ -112,14 +120,24 @@ local function OnEvent(self, event, ...)
 			row:ClearAllPoints()
             
 			if rowIndex == 1 then
-				row:SetPoint("BOTTOMLEFT", QuestList, "BOTTOMLEFT", 0, 0)
+				row:SetPoint("TOPLEFT", QuestList, "TOPLEFT", 0, 0)
 			else
-				row:SetPoint("BOTTOMLEFT", QuestList.rows[rowIndex-1], "TOPLEFT", 0, QUEST_SPACING)
+				row:SetPoint("TOPLEFT", QuestList.rows[rowIndex-1], "BOTTOMLEFT", 0, -QUEST_SPACING)
 			end
 
 			row:Show()
 			rowIndex = rowIndex + 1
 		end
+
+		local height = 0
+		for _, row in ipairs(QuestList.rows) do
+			if row:IsShown() then height = height + row:GetHeight() end
+		end
+
+		QuestList:SetHeight(height)
+		local maxHeight = GetScreenHeight() / 3
+
+		QuestListParent:SetHeight(math.min(height+QUEST_SPACING+5, maxHeight))
 	end
 end
 
@@ -133,3 +151,15 @@ f:RegisterEvent("UNIT_QUEST_LOG_CHANGED")
 f:SetScript("OnEvent", OnEvent)
 
 WatchFrame:HookScript("OnShow", function(self) self:Hide() end)
+
+QuestListParent:EnableMouseWheel(true)
+QuestListParent:SetScript("OnMouseWheel", function(self, delta)
+	local current = self:GetVerticalScroll()
+	local step = 30
+	local max = self:GetVerticalScrollRange()
+	local newScroll = current - (delta * step)
+
+	newScroll = math.max(0, math.min(newScroll, max))
+
+	self:SetVerticalScroll(newScroll)
+end)

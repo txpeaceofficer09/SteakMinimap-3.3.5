@@ -2,18 +2,15 @@ local f = CreateFrame("Frame", nil, UIParent)
 
 local questDots = {}
 
-local function MapFrame_UpdateQuestIcons()
-	--if not WorldMapFrame:IsShown() then SetMapToCurrentZone() end
-
+function MapFrame_UpdateQuestIcons()
 	local mapW = MapFrameSC:GetWidth()
 	local mapH = MapFrameSC:GetHeight()
 
 	for _, poi in ipairs(questDots) do poi:Hide() end
-	
+
 	local index = 1
 	
-	--for i=1, GetNumQuestLogEntries() do
-	for i=GetNumQuestLogEntries(),1,-1 do
+	for i=1, GetNumQuestLogEntries() do
 		local poi = questDots[i]
 		
 		if not poi then
@@ -73,14 +70,6 @@ local function MapFrame_UpdateQuestIcons()
 			poi.num:SetText(isComplete and "?" or index)
 
 			if posX and posX > 0 then
-				--[[
-				if isComplete then
-					poi.num:SetText("?")
-				else
-					poi.num:SetText(index)
-				end
-				]]
-
 				local finalX = posX * mapW
 				local finalY = -posY * mapH
 
@@ -91,7 +80,6 @@ local function MapFrame_UpdateQuestIcons()
 				poi:SetPoint("CENTER", MapFrameSC, "TOPLEFT", finalX, finalY)
 
 				poi.questID = questID
-				poi.num:SetText(index)
 				
 				poi:Show()
 				index = index + 1
@@ -101,30 +89,58 @@ local function MapFrame_UpdateQuestIcons()
 end
 
 local function OnEvent(self, event, ...)
-	if event == "QUEST_LOG_UPDATE" or event == "QUEST_POI_UPDATE" or event == "UNIT_QUEST_LOG_CHANGED" then
-		if not InCombatLockdown() and not WorldMapFrame:IsShown() and not QuestLogFrame:IsShown() then
-			local mapSize = WORLDMAP_SETTINGS.size
-			WORLDMAP_SETTINGS.size = WORLDMAP_WINDOWED_SIZE
-			ShowUIPanel(WorldMapFrame)
-			WorldMapFrame:ClearAllPoints()
-			WorldMapFrame:SetClampedToScreen(false)
-			WorldMapFrame:SetPoint("RIGHT", UIParent, "LEFT", -1000, 0)
-			HideUIPanel(WorldMapFrame)
-		end
-	end		
+	if event == "UNIT_QUEST_LOG_CHANGED" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_ENTERING_WORLD" or event == "QUEST_COMPLETE" or event == "QUEST_PROGRESS" then
+		self:SetScript("OnUpdate", function(self, elapsed)
+			self.timer = (self.timer or 0) + elapsed
+			if self.timer < 0.2 then return end
+			self.timer = 0
+			self:SetScript("OnUpdate", nil)
 
-	MapFrame_UpdateQuestIcons()
+			if not InCombatLockdown() and not WorldMapFrame:IsShown() and not QuestLogFrame:IsShown() and not QuestFrame:IsShown() then
+				local mapSize = WORLDMAP_SETTINGS.size
+				WORLDMAP_SETTINGS.size = WORLDMAP_WINDOWED_SIZE
+				ShowUIPanel(WorldMapFrame)
+				WorldMapFrame:ClearAllPoints()
+				WorldMapFrame:SetClampedToScreen(false)
+				WorldMapFrame:SetPoint("RIGHT", UIParent, "LEFT", -1000, 0)
+				HideUIPanel(WorldMapFrame)
+				WorldMapFrame:ClearAllPoints()
+				WorldMapFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+				WORLDMAP_SETTINGS.size = mapSize
+			end
+
+			MapFrame_UpdateQuestIcons()
+		end)
+	else
+		MapFrame_UpdateQuestIcons()
+	end
 end
 
-f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:RegisterEvent("WORLD_MAP_UPDATE")
-f:RegisterEvent("ZONE_CHANGED")
-f:RegisterEvent("ZONE_CHANGED_INDOORS")
-f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-f:RegisterEvent("CLOSE_WORLD_MAP")
-f:RegisterEvent("WORLD_MAP_NAME_UPDATE")
-f:RegisterEvent("QUEST_LOG_UPDATE")
-f:RegisterEvent("QUEST_POI_UPDATE")
-f:RegisterEvent("UNIT_QUEST_LOG_CHANGED")
+local events = {
+	"PLAYER_ENTERING_WORLD",
+	"WORLD_MAP_UPDATE",
+	"ZONE_CHANGED",
+	"ZONE_CHANGED_NEW_AREA",
+	"CLOSE_WORLD_MAP",
+	"WORLD_MAP_NAME_UPDATE",
+	"QUEST_LOG_UPDATE",
+	"QUEST_POI_UPDATE",
+	"UNIT_QUEST_LOG_CHANGED",
+	"QUEST_WATCH_UPDATE",
+	"QUEST_ACCEPTED",
+	"QUEST_REMOVED",
+	"QUEST_COMPLETE",
+	"QUEST_FINISHED",
+	"QUEST_DETAIL",
+	"QUEST_PROGRESS",
+	"QUEST_GREETING",
+	"QUEST_ITEM_UPDATE",
+	"QUEST_AUTOCOMPLETE",
+	--"CHAT_MSG_SYSTEM"
+}
+
+for _, event in ipairs(events) do
+	f:RegisterEvent(event)
+end
 
 f:SetScript("OnEvent", OnEvent)

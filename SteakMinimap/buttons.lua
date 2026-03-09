@@ -55,12 +55,16 @@ function MoveMinimapButtons()
 	end
 
 	local sortTbl = {"GameTimeFrame", "MiniMapTrackingButton"}
+	local priority = {"MiniMapMailFrame", "MiniMapLFGFrame"}
+
+	local offset = 3
 
 	for k, v in pairs(frames) do
 		if tContains(sortTbl, v) then
 			-- Do nothing the frame is already there.
 		elseif _G[v]:IsVisible() then
-			tinsert(sortTbl, 3, v)
+			tinsert(sortTbl, offset, v)
+			if tContains(priority, v) then offset = offset + 1 end
 		else
 			tinsert(sortTbl, v)
 		end
@@ -72,8 +76,6 @@ function MoveMinimapButtons()
 		end
 		]]
 	end
-	
-	--sortTbl[1] = nil
 	
 	for k, v in pairs(sortTbl) do
 		local frame = _G[v]
@@ -113,7 +115,6 @@ local function OnEvent(self, event, ...)
 	end)
 end
 
---[[
 local function OnUpdate(self, elapsed)
 	self.timer = (self.timer or 0) + elapsed
 
@@ -123,9 +124,8 @@ local function OnUpdate(self, elapsed)
 		self.timer = 0
 	end
 end
-]]
 
 MMBF:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 MMBF:SetScript("OnEvent", OnEvent)
---MMBF:SetScript("OnUpdate", OnUpdate)
+MMBF:SetScript("OnUpdate", OnUpdate)

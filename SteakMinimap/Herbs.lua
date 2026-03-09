@@ -26,7 +26,7 @@ local function OnEvent(self, event, ...)
 		local x = floor(coord / 10000) / 10000
 		local y = (coord % 10000) / 10000
 
-		local dot = gmHerDots[index]
+		local dot = gmHerbDots[index]
 
 		if not gmHerbDots[index] then
 			dot = CreateFrame("Frame", nil, MapFrameSC)

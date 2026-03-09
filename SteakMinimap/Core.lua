@@ -129,6 +129,18 @@ local zoneOverride = {
 			["Size"] = { width = 59, height = 59 },
 			["Zoom"] = 1
 		}
+	},
+	["Undercity"] = {
+		["Minimap"] = {
+			["Size"] = { width = 130, height = 130 },
+			["Zoom"] = 1
+		}
+	},
+	["Zangarmarsh"] = {
+		["Minimap"] = {
+			["Size"] = { width = 85, height = 85 },
+			["Zoom"] = 1
+		}
 	}
 }
 
@@ -185,10 +197,14 @@ function MapFrame_UpdateTextures()
 	local mapFileName, textureHeight, textureWidth = GetMapInfo()
 	local dungeonLevel = GetCurrentMapDungeonLevel()
 
-	if IsInCity() or IsInInstance() then
+	if IsInInstance() then
+		Minimap:Hide()
+	elseif IsInCity() then
 		Minimap:SetZoom(3)
 		Minimap:SetSize(150, 150)
+		Minimap:Show()
 	else
+		Minimap:Show()
 		Minimap:SetSize(70, 70)
 		Minimap:SetZoom(1)
 	end
@@ -270,8 +286,14 @@ local function OnEvent(self, event, ...)
 		Minimap:SetAlpha(0)
 		MapFrameSC:SetSize(MAPW, MAPH)
 		self:SetScrollChild(MapFrameSC)
-		Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8X8")
+		--Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8X8")
 		self:Show()
+
+		DurabilityFrame:ClearAllPoints()
+		DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
+	elseif event == "UPDATE_INVENTORY_DURABILITY" then
+		DurabilityFrame:ClearAllPoints()
+		DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
 	elseif event == "VARIABLES_LOADED" then
 		SteakMinimapZones = SteakMinimapZones or {}
 	elseif event == "WORLD_MAP_UPDATE" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "WORLD_MAP_NAME_UPDATE" or event == "ZONE_CHANGED_NEW_AREA" then
@@ -293,6 +315,8 @@ f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 f:RegisterEvent("CLOSE_WORLD_MAP")
 f:RegisterEvent("WORLD_MAP_NAME_UPDATE")
 f:RegisterEvent("MINIMAP_PING")
+
+f:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
 
 f:SetScript("OnEvent", OnEvent)
 f:SetScript("OnUpdate", function(self, elapsed)
@@ -319,7 +343,7 @@ f:SetScript("OnUpdate", function(self, elapsed)
 	end
 
 	PlayerArrow:Show()
-	Minimap:Show()
+	--Minimap:Show()
 
 	local facing = GetPlayerFacing()
 

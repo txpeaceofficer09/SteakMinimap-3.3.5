@@ -2,6 +2,14 @@ local f = CreateFrame("Frame", nil, UIParent)
 
 local UnitDots = {}
 
+local function TexCoord(object, texture, columns, rows, column, row)
+	local width = 1 / columns
+	local height = 1 / rows
+
+	object:SetTexture(texture)
+	object:SetTexCood((column-1)*width, column*width, (row-1)*height, row*height)
+end
+
 local function OnUpdate(self, elapsed)
 	local prefix = (GetNumRaidMembers() > 0) and "raid" or "party"
 	local count = (prefix == "raid") and GetNumRaidMembers() or GetNumPartyMembers()
@@ -19,7 +27,7 @@ local function OnUpdate(self, elapsed)
 
 				if not dot then
 					dot = CreateFrame("Frame", nil, MapFrameSC)
-					dot:SetSize(6, 6)
+					dot:SetSize(12, 12)
 
 					local icon = dot:CreateTexture(nil, "BACKGROUND")
 					icon:SetAllPoints(dot)
