@@ -1,65 +1,69 @@
 local f = CreateFrame("Frame", nil, UIParent)
 
-local fpDots = {}
-
-local function IsInCity()
-    local channels = {GetChannelList()}
-    
-    for i = 1, #channels, 2 do
-        local id, name = channels[i], channels[i+1]
-
-        if string.find(name, "Trade") then
-            return true
-        end
-    end
-
-    return false 
-end
+local fpIcons = {}
 
 function MapFrame_UpdateFlightPaths()
-	for _, poi in ipairs(fpDots) do poi:Hide() end
+	for _, poi in ipairs(fpIcons) do poi:Hide() end
 	
-	local mapFilename = GetMapInfo()
-	
-	if not mapFilename or not SteakFlightPaths[mapFilename] then return end
+	local mapID = GetCurrentMapAreaID()
+	if not mapID or mapID == 0 or not SteakFlightPathDB or not SteakFlightPathDB[mapID] then return end
 
 	local mapW, mapH = MapFrameSC:GetSize()
 	
 	local index = 1
-	for _, data in pairs(SteakFlightPaths[mapFilename]) do
-		local dot = fpDots[index]
+	for _, data in pairs(SteakFlightPathDB[mapID]) do
+		local icon = fpIcons[index]
 		
-		if not dot then
-			dot = CreateFrame("Frame", nil, MapFrameSC)
-			dot:SetSize(16, 16)
-			local tex = dot:CreateTexture(nil, "BACKGROUND")
-			tex:SetAllPoints(dot)
-			tex:SetTexture("Interface\\TaxiFrame\\UI-Taxi-Icon-White")
-			dot.tex = tex
-			fpDots[index] = dot
+		if not icon then
+			icon = CreateFrame("Button", nil, MapFrameSC)
+			icon:SetSize(16, 16)
+
+			local tex = icon:CreateTexture(nil, "BACKGROUND")
+			tex:SetAllPoints(icon)
+			tex:SetTexture("Interface\\MINIMAP\\TRACKING\\FlightMaster.blp")
+			icon.tex = tex
+
+			icon.text = icon:CreateFontString(nil, "OVERLAY")
+			icon.text:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 7, "OUTLINE")
+			icon.text:SetPoint("TOP", icon, "BOTTOM", 0, -2)
+			icon.text:Hide()
+
+			icon:SetScript("OnEnter", function(self) self.text:Show() end)
+			icon:SetScript("OnLeave", function(self) self.text:Hide() end)
+
+			fpIcons[index] = icon
 		end
 		
-		dot:ClearAllPoints()
-		dot:SetPoint("CENTER", MapFrameSC, "TOPLEFT", data.x * mapW, -data.y * mapH)
-		dot:Show()
+		icon:ClearAllPoints()
+		icon:SetPoint("CENTER", MapFrameSC, "TOPLEFT", data.x * mapW, -data.y * mapH)
+		icon:Show()
 		index = index + 1
 	end
 end
 
 local function OnEvent(self, event, ...)
 	if event == "VARIABLES_LOADED" then
-		SteakFlightPaths = SteakFlightPaths or {}
+		SteakFlightPathDB = SteakFlightPathDB or {}
 	elseif event == "TAXIMAP_OPENED" then
 		local x, y = GetPlayerMapPosition("player")
-		local mapFilename = GetMapInfo()
+		local mapID = GetCurrentMapAreaID()
+
+		if not mapID or mapID == 0 then return end
+		if ( not x or x == 0 ) or ( not y or y == 0 ) then return end
+
+		SteakFlightPathDB[mapID] = SteakFlightPathDB[mapID] or {}
 		
-		if x > 0 and y > 0 and mapFilename then
-			SteakFlightPaths[mapFilename] = SteakFlightPaths[mapFilename] or {}
-			
-			SteakFlightPaths[mapFilename][("%.0f,%.0f"):format(x * 100, y * 100)] = { x = x, y = y }
-			
-			MapFrame_UpdateFlightPaths()
+		for _, v in ipairs(SteakFlightPathDB[mapID]) do
+			if math.abs(v.x - x) < 0.01 and math.abs(v.y - y) < 0.01 then return end
 		end
+
+		
+		local name = UnitName("target") or "Flight Path"
+		SteakFlightPathDB[mapID] = SteakFlightPathDB[mapID] or {}
+			
+		table.insert(SteakFlightPathDB[mapID], { x = x, y = y, name = name })
+			
+		MapFrame_UpdateFlightPaths()
 	else
 		MapFrame_UpdateFlightPaths()
 	end

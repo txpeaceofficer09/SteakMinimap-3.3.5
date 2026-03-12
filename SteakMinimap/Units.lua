@@ -27,12 +27,24 @@ local function OnUpdate(self, elapsed)
 
 				if not dot then
 					dot = CreateFrame("Frame", nil, MapFrameSC)
-					dot:SetSize(12, 12)
+					dot:SetSize(10, 10)
 
 					local icon = dot:CreateTexture(nil, "BACKGROUND")
 					icon:SetAllPoints(dot)
 					icon:SetTexture("Interface\\AddOns\\SteakMinimap\\unitdot.tga")
 					dot.icon = icon
+
+					dot:EnableMouse(true)
+
+					dot:SetScript("OnEnter", function(self)
+						if not self.unit or not UnitExists(self.unit) then return end
+
+						GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+						GameTooltip:SetUnit(self.unit)
+						GameTooltip:Show()
+					end)
+
+					dot:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
 					UnitDots[i] = dot
 				end
@@ -43,19 +55,26 @@ local function OnUpdate(self, elapsed)
 				iconIndex = GetRaidTargetIndex(unit)
 				isDead = UnitIsDead(unit)
 				isOffline = not UnitIsConnected(unit)
+				dot.unit = unit
+
+				local _, class = UnitClass(unit)
+				local color = RAID_CLASS_COLORS[class] or {r=1, g=1, b=1}
 
 				if isOffline then
 					dot.icon:SetTexture("Interface\\CharacterFrame\\Disconnect-Icon")
+					--dot.icon:SetTexCood(0, 1, 0, 1)
 				elseif isDead then
-					dot.icon:SetTexture("Interface\\Minimap\\POIIcons")
-					dot.icon:SetTexCoord(0.56640625, 0.6328125, 0.00390625, 0.0703125)
+					--dot.icon:SetTexture("Interface\\Minimap\\POIIcons")
+					--dot.icon:SetTexCoord(0.56640625, 0.6328125, 0.00390625, 0.0703125)
+					dot.icon:SetTexture("Interface\\AddOns\\SteakMinimap\\skull.tga")
+					dot.icon:SetVertexColor(color.r, color.g, color.b)
 				elseif iconIndex then
 					dot.icon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_"..iconIndex)
+					--dot.icon:SetTexCood(0, 1, 0, 1)
+					dot.icon:SetVertexColor(1, 1, 1)
 				else
-					local _, class = UnitClass(unit)
-					local color = RAID_CLASS_COLORS[class] or {r=1, g=1, b=1}
-
 					dot.icon:SetTexture("Interface\\AddOns\\SteakMinimap\\unitdot.tga")
+					--dot.icon:SetTexCood(0, 1, 0, 1)
 					dot.icon:SetVertexColor(color.r, color.g, color.b)
 				end
 

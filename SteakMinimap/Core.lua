@@ -1,5 +1,7 @@
 local f = CreateFrame("ScrollFrame", "MapFrame", UIParent)
 
+local SteakTracking = false
+
 local MAPW = 1002
 local MAPH = 662
 
@@ -171,6 +173,24 @@ local function IsInCity()
     return false 
 end
 
+local function Steak_UpdateMinimapTracking()
+	SteakTracking = false
+	for i = 1, GetNumTrackingTypes() do
+		local _, _, active = GetTrackingInfo(i)
+
+		if active then
+			SteakTracking = true
+		end
+	end
+	--[[
+	if SteakTracking then
+		Minimap:Show()
+	else
+		Minimap:Hide()
+	end
+	]]
+end
+
 local function CreatePOI(index)
 	if not poiDots[index] then
 		local dot = CreateFrame("Button", "MapFramePOI"..index, MapFrameSC)
@@ -291,6 +311,8 @@ local function OnEvent(self, event, ...)
 
 		DurabilityFrame:ClearAllPoints()
 		DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
+		
+		Steak_UpdateMinimapTracking()
 	elseif event == "UPDATE_INVENTORY_DURABILITY" then
 		DurabilityFrame:ClearAllPoints()
 		DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
@@ -300,6 +322,8 @@ local function OnEvent(self, event, ...)
 		MapFrame_UpdateTextures()
 	elseif event == "MINIMAP_PING" then
 		local unit, x, y = ...
+	elseif event == "MINIMAP_UPDATE_TRACKING" then
+		Steak_UpdateMinimapTracking()
 	end
 end
 
@@ -317,6 +341,8 @@ f:RegisterEvent("WORLD_MAP_NAME_UPDATE")
 f:RegisterEvent("MINIMAP_PING")
 
 f:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
+
+f:RegisterEvent("MINIMAP_UPDATE_TRACKING")
 
 f:SetScript("OnEvent", OnEvent)
 f:SetScript("OnUpdate", function(self, elapsed)

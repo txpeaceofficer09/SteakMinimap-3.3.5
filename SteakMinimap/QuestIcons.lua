@@ -99,7 +99,8 @@ local function OnEvent(self, event, ...)
 			if not InCombatLockdown() and not WorldMapFrame:IsShown() and not QuestLogFrame:IsShown() and not QuestFrame:IsShown() then
 				local mapSize = WORLDMAP_SETTINGS.size
 				WORLDMAP_SETTINGS.size = WORLDMAP_WINDOWED_SIZE
-				ShowUIPanel(WorldMapFrame)
+				--ShowUIPanel(WorldMapFrame)
+				WorldMapFrame:Show()
 				WorldMapFrame:ClearAllPoints()
 				WorldMapFrame:SetClampedToScreen(false)
 				WorldMapFrame:SetPoint("RIGHT", UIParent, "LEFT", -1000, 0)

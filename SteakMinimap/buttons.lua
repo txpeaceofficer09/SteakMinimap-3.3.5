@@ -100,11 +100,10 @@ function MoveMinimapButtons()
 end
 
 local function OnEvent(self, event, ...)
-	--[[
 	if event == "PLAYER_ENTERING_WORLD" then
 		MoveMinimapButtons()
 	end
-	]]
+	--[[
 	self:SetScript("OnUpdate", function(self, elapsed)
 		self.timer = (self.timer or 0) + elapsed
 		
@@ -113,6 +112,7 @@ local function OnEvent(self, event, ...)
 			MoveMinimapButtons()
 		end
 	end)
+	]]
 end
 
 local function OnUpdate(self, elapsed)

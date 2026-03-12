@@ -2,10 +2,10 @@
 ## Title: SteakMinimap
 ## Notes: Customize the minimap.
 ## DefaultState: enabled
-## Author: SoonBeSteak (https://www.trap-nine.com)
-## Version: 1.0.5
+## Author: SoonBeSteak
+## Version: 1.0.7
 ## OptionalDeps: GatherMate
-## SavedVariables: SteakMinimapZones,SteakFlightPaths
+## SavedVariables: SteakMinimapZones,SteakFlightPathDB, SteakRepairVendorDB, SteakReagentVendorDB
 Core.lua
 buttons.lua
 Corpse.lua
@@ -14,3 +14,5 @@ Units.lua
 Herbs.lua
 FlightPaths.lua
 QuestIcons.lua
+Repair.lua
+Questie.lua
