@@ -55,9 +55,7 @@ function MapFrame_UpdateQuestIcons()
 				end
 			end)
    
-   			poi:SetScript("OnLeave", function(self)
-   				GameTooltip:Hide()
-   			end)
+   			poi:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 			
 			questDots[i] = poi
 		end
@@ -89,6 +87,8 @@ function MapFrame_UpdateQuestIcons()
 end
 
 local function OnEvent(self, event, ...)
+	SetCVar("questPOI", 1)
+
 	if event == "UNIT_QUEST_LOG_CHANGED" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_ENTERING_WORLD" or event == "QUEST_COMPLETE" or event == "QUEST_PROGRESS" then
 		self:SetScript("OnUpdate", function(self, elapsed)
 			self.timer = (self.timer or 0) + elapsed
@@ -97,6 +97,7 @@ local function OnEvent(self, event, ...)
 			self:SetScript("OnUpdate", nil)
 
 			if not InCombatLockdown() and not WorldMapFrame:IsShown() and not QuestLogFrame:IsShown() and not QuestFrame:IsShown() then
+				--SetMapToCurrentZone()
 				local mapSize = WORLDMAP_SETTINGS.size
 				WORLDMAP_SETTINGS.size = WORLDMAP_WINDOWED_SIZE
 				--ShowUIPanel(WorldMapFrame)
@@ -108,6 +109,8 @@ local function OnEvent(self, event, ...)
 				WorldMapFrame:ClearAllPoints()
 				WorldMapFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 				WORLDMAP_SETTINGS.size = mapSize
+				
+				MapFrame_UpdateQuestIcons()
 			end
 
 			MapFrame_UpdateQuestIcons()

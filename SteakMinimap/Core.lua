@@ -39,6 +39,8 @@ coordText:SetShadowColor(0, 0, 0, 1)
 coordText:SetShadowOffset(1, -1)
 
 local sc = CreateFrame("Frame", "MapFrameSC", MapFrame)
+local mm = CreateFrame("Minimap", "SteakMinimap", MapFrameSC, "SecureHandlerStateTemplate")
+RegisterStateDriver(mm, "visibility", "[nocombat] show; hide")
 
 for i = 1, 12, 1 do
 	local t = sc:CreateTexture("MapFrameTexture"..i, "ARTWORK")
@@ -148,7 +150,7 @@ local zoneOverride = {
 
 local PlayerArrow = CreateFrame("Frame", "MapFramePlayerArrowFrame", MapFrameSC)
 PlayerArrow:SetSize(64, 64)
-PlayerArrow:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
+--PlayerArrow:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
 PlayerArrow:SetFrameStrata("DIALOG")
 PlayerArrow:SetFrameLevel(Minimap:GetFrameLevel()+50)
 
@@ -217,16 +219,18 @@ function MapFrame_UpdateTextures()
 	local mapFileName, textureHeight, textureWidth = GetMapInfo()
 	local dungeonLevel = GetCurrentMapDungeonLevel()
 
-	if IsInInstance() then
-		Minimap:Hide()
-	elseif IsInCity() then
-		Minimap:SetZoom(3)
-		Minimap:SetSize(150, 150)
-		Minimap:Show()
-	else
-		Minimap:Show()
-		Minimap:SetSize(70, 70)
-		Minimap:SetZoom(1)
+	if not InCombatLockdown() then
+		if IsInInstance() then
+			mm:Hide()
+		elseif IsInCity() then
+			mm:SetZoom(3)
+			mm:SetSize(150, 150)
+			mm:Show()
+		else
+			mm:Show()
+			mm:SetSize(70, 70)
+			mm:SetZoom(1)
+		end
 	end
 
 	if mapFileName then
@@ -296,14 +300,15 @@ end
 
 local function OnEvent(self, event, ...)
 	if event == "PLAYER_ENTERING_WORLD" then
-		Minimap:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
-		Minimap:SetParent(MapFrameSC)
-		Minimap:SetSize(150, 150)
+		mm:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
+		--Minimap:SetParent(MapFrameSC)
+		--Minimap:SetSize(150, 150)
 		TimeManagerClockButton:Hide()
 		MinimapCluster:ClearAllPoints()
 		MinimapCluster:SetPoint("TOPLEFT", UIParent, "TOPRIGHT", 0, 0)
 		MinimapCluster:Hide()
-		Minimap:SetAlpha(0)
+		Minimap:Hide()
+		mm:SetAlpha(0)
 		MapFrameSC:SetSize(MAPW, MAPH)
 		self:SetScrollChild(MapFrameSC)
 		--Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8X8")
@@ -322,6 +327,10 @@ local function OnEvent(self, event, ...)
 		MapFrame_UpdateTextures()
 	elseif event == "MINIMAP_PING" then
 		local unit, x, y = ...
+
+		MinimapPing:ClearAllPoints()
+		MinimapPing:SetPoint("CENTER", MapFrameSC, "TOPLEFT", x*MapFrameSC:GetWidth(), -y*MapFrameSC:GetHeight())
+		MinimapPing:Show()
 	elseif event == "MINIMAP_UPDATE_TRACKING" then
 		Steak_UpdateMinimapTracking()
 	end
@@ -352,10 +361,47 @@ f:SetScript("OnUpdate", function(self, elapsed)
 		if IsInInstance() then MapFrame_UpdateTextures() end
 
 		PlayerArrow:Hide()
-		Minimap:Hide()
-
 		return
 	end
+
+	PlayerArrow:Show()
+
+	local facing = GetPlayerFacing()
+
+	if facing then PlayerArrow.texture:SetRotation(facing) end
+
+	local mapWidth = MapFrameSC:GetWidth()
+	local mapHeight = MapFrameSC:GetHeight()
+
+	local currentScale = MapFrameSC:GetScale()
+	local scrollX = ((unitX * mapWidth * currentScale) - (self:GetWidth() / 2)) / currentScale
+	local scrollY = ((unitY * mapHeight * currentScale) - (self:GetHeight() / 2)) / currentScale
+
+	self:SetHorizontalScroll(scrollX)
+	self:SetVerticalScroll(scrollY)
+
+	local offsetX, offsetY = 0, 0
+
+	local mmX = (unitX * mapWidth) + offsetX
+	local mmY = (-unitY * mapHeight) - offsetY
+
+	PlayerArrow:ClearAllPoints()
+	PlayerArrow:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
+
+	self.coordTimer = (self.coordTimer or 0) + elapsed
+
+	if self.coordTimer >= 0.1 then
+		coordText:SetText(string.format("%.1f, %.1f", unitX * 100, unitY * 100))
+		coordFrame:SetWidth(coordText:GetWidth()+10)
+
+		self.coordTimer = 0
+	end
+end)
+
+mm:SetScript("OnUpdate", function(self, elapsed)
+	local unitX, unitY = GetPlayerMapPosition("player")
+
+	if unitX == 0 and unitY == 0 then return end
 
 	local mapFileName = GetMapInfo()
 
@@ -364,16 +410,9 @@ f:SetScript("OnUpdate", function(self, elapsed)
 		local zoom = override.Minimap.Zoom or 1
 		local size = override.Minimap.Size or {width = 100, height = 100}
 
-		Minimap:SetZoom(zoom)
-		Minimap:SetSize(size.width, size.height)
+		mm:SetZoom(zoom)
+		mm:SetSize(size.width, size.height)
 	end
-
-	PlayerArrow:Show()
-	--Minimap:Show()
-
-	local facing = GetPlayerFacing()
-
-	if facing then PlayerArrow.texture:SetRotation(facing) end
 
 	local mapWidth = MapFrameSC:GetWidth()
 	local mapHeight = MapFrameSC:GetHeight()
@@ -384,24 +423,8 @@ f:SetScript("OnUpdate", function(self, elapsed)
 	local mmX = (unitX * mapWidth) + offsetX
 	local mmY = (-unitY * mapHeight) - offsetY
 
-	Minimap:ClearAllPoints()
-	Minimap:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
-
-	local currentScale = MapFrameSC:GetScale()
-	local scrollX = ((unitX * mapWidth * currentScale) - (self:GetWidth() / 2)) / currentScale
-	local scrollY = ((unitY * mapHeight * currentScale) - (self:GetHeight() / 2)) / currentScale
-
-	self:SetHorizontalScroll(scrollX)
-	self:SetVerticalScroll(scrollY)
-
-	self.coordTimer = (self.coordTimer or 0) + elapsed
-
-	if self.coordTimer >= 0.1 then
-		coordText:SetText(string.format("%.1f, %.1f", unitX * 100, unitY * 100))
-		coordFrame:SetWidth(coordText:GetWidth()+10)
-
-		self.coordTimer = 0
-	end
+	self:ClearAllPoints()
+	self:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
 end)
 
 f:SetScript("OnMouseWheel", function(self, delta)

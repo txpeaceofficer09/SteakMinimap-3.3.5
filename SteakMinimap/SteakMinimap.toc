@@ -5,7 +5,7 @@
 ## Author: SoonBeSteak
 ## Version: 1.0.7
 ## OptionalDeps: GatherMate
-## SavedVariables: SteakMinimapZones,SteakFlightPathDB, SteakRepairVendorDB, SteakReagentVendorDB
+## SavedVariables: SteakMinimapZones,SteakFlightPathDB, SteakRepairVendorDB, SteakReagentVendorDB, SteakMapConfigDB
 Core.lua
 buttons.lua
 Corpse.lua
@@ -16,3 +16,4 @@ FlightPaths.lua
 QuestIcons.lua
 Repair.lua
 Questie.lua
+Options.lua

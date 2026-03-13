@@ -2,7 +2,7 @@ CreateFrame("Frame", "MMBF", UIParent)
 MMBF:SetSize(50, 50)
 MMBF:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, 0)
 
-function MoveMinimapButtons()
+function SteakMap_MoveMinimapButtons()
 	local frames = {}
 	local kids = {Minimap:GetChildren()}
 
@@ -17,7 +17,7 @@ function MoveMinimapButtons()
 			v:SetParent(MapFrame)
 			v:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
 			v:SetPoint("TOPLEFT", MapFrame, "TOPLEFT", 0, 0)
-		elseif v:GetName() == nil or tContains(hideThese, v:GetName()) then
+		elseif v:GetName() == nil or tContains(hideThese, v:GetName()) or v:GetName():match("^QuestieFrame") then
 			v:Hide()
 		elseif v:GetName() == "MinimapPing" then
 			v:SetParent(MapFrameSC)
@@ -101,7 +101,7 @@ end
 
 local function OnEvent(self, event, ...)
 	if event == "PLAYER_ENTERING_WORLD" then
-		MoveMinimapButtons()
+		SteakMap_MoveMinimapButtons()
 	end
 	--[[
 	self:SetScript("OnUpdate", function(self, elapsed)
@@ -109,7 +109,7 @@ local function OnEvent(self, event, ...)
 		
 		if self.timer >= 0.1 then
 			self:SetScript("OnUpdate", nil)
-			MoveMinimapButtons()
+			SteakMap_MoveMinimapButtons()
 		end
 	end)
 	]]
@@ -117,12 +117,10 @@ end
 
 local function OnUpdate(self, elapsed)
 	self.timer = (self.timer or 0) + elapsed
+	if self.timer < 1 then return end
+	self.timer = 0
 
-	if self.timer >= 1 then
-		MoveMinimapButtons()
-
-		self.timer = 0
-	end
+	SteakMap_MoveMinimapButtons()
 end
 
 MMBF:RegisterEvent("PLAYER_ENTERING_WORLD")
