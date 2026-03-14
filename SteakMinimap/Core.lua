@@ -22,25 +22,7 @@ f:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark"
 f:SetFrameStrata("HIGH")
 f:SetFrameLevel(25)
 
-local coordFrame = CreateFrame("Frame", nil, UIParent)
-coordFrame:SetSize(80, 20)
-coordFrame:SetPoint("BOTTOMLEFT", MapFrame, "BOTTOMLEFT", 0, 0)
-coordFrame:SetFrameStrata("HIGH")
-coordFrame:SetFrameLevel(f:GetFrameLevel()+2)
-coordFrame:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
-
---local coordText = coordFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-local coordText = coordFrame:CreateFontString(nil, "OVERLAY")
-coordText:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
-coordText:SetPoint("BOTTOMLEFT", coordFrame, "BOTTOMLEFT", 5, 5)
-coordText:SetTextColor(1, 1, 1)
-coordText:SetDrawLayer("OVERLAY", 7) 
-coordText:SetShadowColor(0, 0, 0, 1)
-coordText:SetShadowOffset(1, -1)
-
 local sc = CreateFrame("Frame", "MapFrameSC", MapFrame)
-local mm = CreateFrame("Minimap", "SteakMinimap", MapFrameSC, "SecureHandlerStateTemplate")
-RegisterStateDriver(mm, "visibility", "[nocombat] show; hide")
 
 for i = 1, 12, 1 do
 	local t = sc:CreateTexture("MapFrameTexture"..i, "ARTWORK")
@@ -61,11 +43,9 @@ for i = 1, 12, 1 do
 end
 
 sc:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
-sc:Show()
+--sc:Show()
 
-f:Show()
-
-local poiDots = {}
+--f:Show()
 
 local zoneOverride = {
 	["Barrens"] = {
@@ -152,7 +132,7 @@ local PlayerArrow = CreateFrame("Frame", "MapFramePlayerArrowFrame", MapFrameSC)
 PlayerArrow:SetSize(64, 64)
 --PlayerArrow:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
 PlayerArrow:SetFrameStrata("DIALOG")
-PlayerArrow:SetFrameLevel(Minimap:GetFrameLevel()+50)
+PlayerArrow:SetFrameLevel(MapFrameSC:GetFrameLevel()+10)
 
 PlayerArrow.texture = PlayerArrow:CreateTexture(nil, "OVERLAY")
 PlayerArrow.texture:SetAllPoints(PlayerArrow)
@@ -175,6 +155,24 @@ local function IsInCity()
     return false 
 end
 
+MapFrame:SetScript("OnMouseDown", function(self, button)
+	if button ~= "LeftButton" then return end
+
+	local width  = MapFrameSC:GetWidth()
+	local height = MapFrameSC:GetHeight()
+
+	local x, y = GetCursorPosition()
+	local sx, sy = MapFrameSC:GetCenter()
+	local scale = MapFrameSC:GetEffectiveScale()
+
+	x = (x / scale - (sx - width/2)) / width
+	y = 1 - ((y / scale - (sy - height/2)) / height)
+
+	if x >= 0 and x <= 1 and y >= 0 and y <= 1 then
+		Minimap:PingLocation(x, y)
+	end
+end)
+
 local function Steak_UpdateMinimapTracking()
 	SteakTracking = false
 	for i = 1, GetNumTrackingTypes() do
@@ -193,45 +191,9 @@ local function Steak_UpdateMinimapTracking()
 	]]
 end
 
-local function CreatePOI(index)
-	if not poiDots[index] then
-		local dot = CreateFrame("Button", "MapFramePOI"..index, MapFrameSC)
-
-		dot:SetSize(32, 32)
-		dot:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-		dot:SetScript("OnEnter", WorldMapPOI_OnEnter)
-		dot:SetScript("OnLeave", WorldMapPOI_OnLeave)
-		dot:SetScript("OnClick", WorldMapPOI_OnClick)
-
-		local tex = dot:CreateTexture(dot:GetName().."Texture", "OVERLAY")
-		tex:SetSize(16, 16)
-		tex:SetPoint("CENTER", 0, 0)
-		tex:SetTexture("Interface\\Minimap\\POIIcons")
-
-		dot.tex = tex
-		poiDots[index] = dot
-	end
-
-	return poiDots[index]
-end
-
 function MapFrame_UpdateTextures()
 	local mapFileName, textureHeight, textureWidth = GetMapInfo()
 	local dungeonLevel = GetCurrentMapDungeonLevel()
-
-	if not InCombatLockdown() then
-		if IsInInstance() then
-			mm:Hide()
-		elseif IsInCity() then
-			mm:SetZoom(3)
-			mm:SetSize(150, 150)
-			mm:Show()
-		else
-			mm:Show()
-			mm:SetSize(70, 70)
-			mm:SetZoom(1)
-		end
-	end
 
 	if mapFileName then
 		SteakMinimapZones[mapFileName] = {
@@ -267,48 +229,15 @@ function MapFrame_UpdateTextures()
 			_G["MapFrameTexture"..i]:SetTexture(prefix..mapFileName.."\\"..mapFileName..i)
 		end
 	end
-
-	local numPOIs = GetNumMapLandmarks()
-	if ( #poiDots < numPOIs ) then
-		for i=#poiDots+1,numPOIs do
-			CreatePOI(i)
-		end
-	end
-
-	for i=1, #poiDots do
-		local namePOI = "MapFramePOI"..i
-		local mapPOI = _G[namePOI]
-
-		if ( i <= numPOIs ) then
-			local name, description, textureIndex, x, y, mapLinkID = GetMapLandmarkInfo(i);
-			local x1, x2, y1, y2 = WorldMap_GetPOITextureCoords(textureIndex)
-			
-			_G[namePOI.."Texture"]:SetTexCoord(x1, x2, y1, y2)
-			x = x * MapFrameSC:GetWidth()
-			y = -y * MapFrameSC:GetHeight()
-			mapPOI:SetPoint("CENTER", "MapFrameSC", "TOPLEFT", x, y)
-			mapPOI.name = name
-			mapPOI.description = description
-			mapPOI.mapLinkID = mapLinkID
-
-			mapPOI:Show()
-		else
-			mapPOI:Hide()
-		end
-	end
 end
 
 local function OnEvent(self, event, ...)
 	if event == "PLAYER_ENTERING_WORLD" then
-		mm:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
-		--Minimap:SetParent(MapFrameSC)
-		--Minimap:SetSize(150, 150)
 		TimeManagerClockButton:Hide()
 		MinimapCluster:ClearAllPoints()
 		MinimapCluster:SetPoint("TOPLEFT", UIParent, "TOPRIGHT", 0, 0)
 		MinimapCluster:Hide()
 		Minimap:Hide()
-		mm:SetAlpha(0)
 		MapFrameSC:SetSize(MAPW, MAPH)
 		self:SetScrollChild(MapFrameSC)
 		--Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8X8")
@@ -319,23 +248,43 @@ local function OnEvent(self, event, ...)
 		
 		Steak_UpdateMinimapTracking()
 	elseif event == "UPDATE_INVENTORY_DURABILITY" then
-		DurabilityFrame:ClearAllPoints()
-		DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
+		if not InCombatLockdown() then
+			DurabilityFrame:ClearAllPoints()
+			DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
+		end
 	elseif event == "VARIABLES_LOADED" then
 		SteakMinimapZones = SteakMinimapZones or {}
 	elseif event == "WORLD_MAP_UPDATE" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "WORLD_MAP_NAME_UPDATE" or event == "ZONE_CHANGED_NEW_AREA" then
 		MapFrame_UpdateTextures()
 	elseif event == "MINIMAP_PING" then
+		if not Ping then
+			local Ping = MapFrameSC:CreateTexture(nil, "OVERLAY")
+			Ping:SetSize(32, 32)
+			Ping:SetTexture("Interface\\Minimap\\MinimapPing") -- or your own
+			Ping:Hide()
+		end
+
 		local unit, x, y = ...
 
-		MinimapPing:ClearAllPoints()
-		MinimapPing:SetPoint("CENTER", MapFrameSC, "TOPLEFT", x*MapFrameSC:GetWidth(), -y*MapFrameSC:GetHeight())
-		MinimapPing:Show()
+		Ping:ClearAllPoints()
+		Ping:SetPoint("CENTER", MapFrameSC, "TOPLEFT", x*MapFrameSC:GetWidth(), -y*MapFrameSC:GetHeight())
+		Ping.timer = 0
+		Ping:Show()
+		
+		Ping:SetScript("OnUpdate", function(self, elapsed)
+			self.timer = (self.timer or 0) + elapsed
+			if self.timer < 1.5 then return end
+			self.timer = 0
+			self:SetScript("OnUpdate", nil)
+			
+			self:Hide()
+		end)
 	elseif event == "MINIMAP_UPDATE_TRACKING" then
 		Steak_UpdateMinimapTracking()
 	end
 end
 
+f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("VARIABLES_LOADED")
 
@@ -377,8 +326,10 @@ f:SetScript("OnUpdate", function(self, elapsed)
 	local scrollX = ((unitX * mapWidth * currentScale) - (self:GetWidth() / 2)) / currentScale
 	local scrollY = ((unitY * mapHeight * currentScale) - (self:GetHeight() / 2)) / currentScale
 
-	self:SetHorizontalScroll(scrollX)
-	self:SetVerticalScroll(scrollY)
+	if not InCombatLockdown() then
+		self:SetHorizontalScroll(scrollX)
+		self:SetVerticalScroll(scrollY)
+	end
 
 	local offsetX, offsetY = 0, 0
 
@@ -387,62 +338,16 @@ f:SetScript("OnUpdate", function(self, elapsed)
 
 	PlayerArrow:ClearAllPoints()
 	PlayerArrow:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
-
-	self.coordTimer = (self.coordTimer or 0) + elapsed
-
-	if self.coordTimer >= 0.1 then
-		coordText:SetText(string.format("%.1f, %.1f", unitX * 100, unitY * 100))
-		coordFrame:SetWidth(coordText:GetWidth()+10)
-
-		self.coordTimer = 0
-	end
-end)
-
-mm:SetScript("OnUpdate", function(self, elapsed)
-	local unitX, unitY = GetPlayerMapPosition("player")
-
-	if unitX == 0 and unitY == 0 then return end
-
-	local mapFileName = GetMapInfo()
-
-	if mapFileName and zoneOverride[mapFileName] then
-		local override = zoneOverride[mapFileName]
-		local zoom = override.Minimap.Zoom or 1
-		local size = override.Minimap.Size or {width = 100, height = 100}
-
-		mm:SetZoom(zoom)
-		mm:SetSize(size.width, size.height)
-	end
-
-	local mapWidth = MapFrameSC:GetWidth()
-	local mapHeight = MapFrameSC:GetHeight()
-
-	local offsetX = 0
-	local offsetY = 0
-
-	local mmX = (unitX * mapWidth) + offsetX
-	local mmY = (-unitY * mapHeight) - offsetY
-
-	self:ClearAllPoints()
-	self:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
 end)
 
 f:SetScript("OnMouseWheel", function(self, delta)
 	if delta > 0 and MapFrameSC:GetScale() < 2 then
-		MapFrameSC:SetScale(MapFrameSC:GetScale()+0.01)
+		--MapFrameSC:SetScale(MapFrameSC:GetScale()+0.01)
+		MapFrameSC:SetScale(MapFrameSC:GetScale()+0.05)
 	elseif MapFrameSC:GetScale() > 0.4 then
-		MapFrameSC:SetScale(MapFrameSC:GetScale()-0.01)
+		--MapFrameSC:SetScale(MapFrameSC:GetScale()-0.01)
+		MapFrameSC:SetScale(MapFrameSC:GetScale()-0.05)
 	end
-
-	--[[
-	for _, child in ipairs({MapFrameSC:GetChildren()}) do
-		if child ~= Minimap then
-			child:SetScale(1 / MapFrameSC:GetScale())
-			local resize = 1 / child:GetScale()
-			child:SetSize(child:GetWidth() * resize, child:GetHeight() * resize)
-		end
-	end
-	]]
 end)
 
 hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)

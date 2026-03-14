@@ -47,7 +47,7 @@ local function SaveReagentVendor()
 	table.insert(SteakReagentVendorDB[mapID], { x = x, y = y, name = name })
 end
 
-local function MapFrame_UpdateReagentVendors()
+function SteakMap_UpdateReagentVendors()
 	for _, icon in ipairs(ReagentIcons) do icon:Hide() end
 
 	local mapID = GetCurrentMapAreaID()
@@ -96,9 +96,9 @@ local function OnEvent(self, event, ...)
 	elseif event == "MERCHANT_SHOW" then
 		SaveReagentVendor()
 
-		MapFrame_UpdateReagentVendors()
+		SteakMap_UpdateReagentVendors()
 	else
-		MapFrame_UpdateReagentVendors()
+		SteakMap_UpdateReagentVendors()
 	end
 end
 

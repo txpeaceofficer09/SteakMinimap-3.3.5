@@ -23,7 +23,7 @@ local function SaveRepairVendor()
 	table.insert(SteakRepairVendorDB[mapID], { x = x, y = y, name = name })
 end
 
-local function MapFrame_UpdateRepairVendors()
+function SteakMap_UpdateRepairVendors()
 	for _, icon in ipairs(repairIcons) do icon:Hide() end
 
 	local mapID = GetCurrentMapAreaID()
@@ -72,9 +72,9 @@ local function OnEvent(self, event, ...)
 	elseif event == "MERCHANT_SHOW" then
 		SaveRepairVendor()
 
-		MapFrame_UpdateRepairVendors()
+		SteakMap_UpdateRepairVendors()
 	else
-		MapFrame_UpdateRepairVendors()
+		SteakMap_UpdateRepairVendors()
 	end
 end
 

@@ -2,8 +2,10 @@ local f = CreateFrame("Frame", nil, UIParent)
 
 local fpIcons = {}
 
-function MapFrame_UpdateFlightPaths()
+function SteakMap_UpdateFlightPaths()
 	for _, poi in ipairs(fpIcons) do poi:Hide() end
+
+	if not SteakMapConfigDB.showFlight then return end
 	
 	local mapID = GetCurrentMapAreaID()
 	if not mapID or mapID == 0 or not SteakFlightPathDB or not SteakFlightPathDB[mapID] then return end
@@ -63,9 +65,9 @@ local function OnEvent(self, event, ...)
 			
 		table.insert(SteakFlightPathDB[mapID], { x = x, y = y, name = name })
 			
-		MapFrame_UpdateFlightPaths()
+		SteakMap_UpdateFlightPaths()
 	else
-		MapFrame_UpdateFlightPaths()
+		SteakMap_UpdateFlightPaths()
 	end
 end
 
