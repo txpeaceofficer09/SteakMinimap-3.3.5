@@ -62,7 +62,7 @@ function SteakMap_MoveMinimapButtons()
 	for k, v in pairs(frames) do
 		if tContains(sortTbl, v) then
 			-- Do nothing the frame is already there.
-		elseif _G[v]:IsVisible() then
+		elseif _G[v]:IsShown() then
 			tinsert(sortTbl, offset, v)
 			if tContains(priority, v) then offset = offset + 1 end
 		else

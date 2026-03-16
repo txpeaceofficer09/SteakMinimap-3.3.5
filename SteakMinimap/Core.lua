@@ -15,12 +15,12 @@ f:EnableKeyboard(false)
 f:EnableMouse(true)
 f:EnableMouseWheel(true)
 
-f:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 20)
+f:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 21)
 f:SetSize(MMAPW, MMAPH)
 f:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
 
-f:SetFrameStrata("HIGH")
-f:SetFrameLevel(25)
+f:SetFrameStrata("LOW")
+--f:SetFrameLevel(25)
 
 local sc = CreateFrame("Frame", "MapFrameSC", MapFrame)
 
@@ -43,95 +43,11 @@ for i = 1, 12, 1 do
 end
 
 sc:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
---sc:Show()
 
---f:Show()
-
-local zoneOverride = {
-	["Barrens"] = {
-		["Minimap"] = {
-			["Size"] = { width = 40, height = 40 },
-			["Zoom"] = 1
-		}
-	},
-	["BlastedLands"] = {
-		["Minimap"] = {
-			["Size"] = { width = 145, height = 145 },
-			["Zoom"] = 1
-		}
-	},
-	["Desolace"] = {
-		["Minimap"] = {
-			["Size"] = { width = 90, height = 90 },
-			["Zoom"] = 1
-		}
-	},
-	["EasternPlaguelands"] = {
-		["Minimap"] = {
-			["Size"] = { width = 95, height = 95 },
-			["Zoom"] = 1
-		}
-	},
-	["IcecrownGlacier"] = {
-		["Minimap"] = {
-			["Size"] = { width = 70, height = 70 },
-			["Zoom"] = 1
-		}
-	},
-	["LakeWintergrasp"] = {
-		["Minimap"] = {
-			["Size"] = { width = 140, height = 140 },
-			["Zoom"] = 1
-		}
-	},
-	["Maraudon"] = {
-		["Minimap"] = {
-			["Size"] = { width = 70, height = 70 },
-			["Zoom"] = 1
-		}
-	},
-	["Ogrimmar"] = {
-		["Minimap"] = {
-			["Size"] = { width = 75, height = 75 },
-			["Zoom"] = 3
-		}
-	},
-	["SholazarBasin"] = {
-		["Minimap"] = {
-			["Size"] = { width = 90, height = 90 },
-			["Zoom"] = 1
-		}
-	},
-	["SwampOfSorrows"] = {
-		["Minimap"] = {
-			["Size"] = { width = 150, height = 150 },
-			["Zoom"] = 1
-		}
-	},
-	["Tanaris"] = {
-		["Minimap"] = {
-			["Size"] = { width = 59, height = 59 },
-			["Zoom"] = 1
-		}
-	},
-	["Undercity"] = {
-		["Minimap"] = {
-			["Size"] = { width = 130, height = 130 },
-			["Zoom"] = 1
-		}
-	},
-	["Zangarmarsh"] = {
-		["Minimap"] = {
-			["Size"] = { width = 85, height = 85 },
-			["Zoom"] = 1
-		}
-	}
-}
-
-local PlayerArrow = CreateFrame("Frame", "MapFramePlayerArrowFrame", MapFrameSC)
+local PlayerArrow = CreateFrame("Frame", "SteakMinimapPlayerArrowFrame", MapFrameSC)
 PlayerArrow:SetSize(64, 64)
 --PlayerArrow:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
-PlayerArrow:SetFrameStrata("DIALOG")
+PlayerArrow:SetFrameStrata("HIGH")
 PlayerArrow:SetFrameLevel(MapFrameSC:GetFrameLevel()+10)
 
 PlayerArrow.texture = PlayerArrow:CreateTexture(nil, "OVERLAY")

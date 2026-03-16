@@ -12,9 +12,12 @@ function MapFrame_UpdatePOI()
 		
 		if not poi then
 			local poi = CreateFrame("Button", nil, MapFrameSC)
-			
+
 			poi:SetSize(32, 32)
-			poi:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+			poi:SetFrameStrata(MapFrameSC:GetFrameStrata())
+			poi:SetFrameLevel(MapFrameSC:GetFrameLevel()+1)
+
+			--poi:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 			poi:SetScript("OnEnter", WorldMapPOI_OnEnter)
 			poi:SetScript("OnLeave", WorldMapPOI_OnLeave)
 			poi:SetScript("OnClick", WorldMapPOI_OnClick)

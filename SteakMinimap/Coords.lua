@@ -3,7 +3,7 @@ local coordFrame = CreateFrame("Frame", nil, UIParent)
 coordFrame:SetSize(80, 20)
 coordFrame:SetPoint("BOTTOMLEFT", MapFrame, "BOTTOMLEFT", 0, 0)
 coordFrame:SetFrameStrata("HIGH")
-coordFrame:SetFrameLevel(f:GetFrameLevel()+2)
+coordFrame:SetFrameLevel(MapFrame:GetFrameLevel()+2)
 coordFrame:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
 
 local coordText = coordFrame:CreateFontString(nil, "OVERLAY")
@@ -19,7 +19,9 @@ local function OnUpdate(self, elapsed)
 	if self.timer < 0.1 then return end
 	self.timer = 0
 	
-	coordText:SetText(string.format("%.1f, %.1f", unitX * 100, unitY * 100))
+	local x, y = GetPlayerMapPosition("player")
+	
+	coordText:SetText(string.format("%.1f, %.1f", x * 100, y * 100))
 	coordFrame:SetWidth(coordText:GetWidth()+10)	
 end
 

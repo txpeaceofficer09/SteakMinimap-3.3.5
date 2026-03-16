@@ -17,6 +17,44 @@ QuestList:SetSize(QUEST_LIST_WIDTH, 1)
 QuestListParent:SetScrollChild(QuestList)
 QuestList.rows = {}
 
+local header = CreateFrame("Frame", "SteakQuestHeader", UIParent)
+header:SetPoint("BOTTOMLEFT", QuestListParent, "TOPLEFT", 0, 2)
+header:SetPoint("BOTTOMRIGHT", QuestListParent, "TOPRIGHT", 0, 2)
+header:SetHeight(20)
+
+local bg = header:CreateTexture(nil, "BACKGROUND")
+bg:SetTexture(0.5, 0.5, 0.5, 0.5)
+bg:SetAllPoints()
+header.bg = bg
+
+local label = header:CreateFontString(nil, "OVERLAY")
+label:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
+label:SetPoint("LEFT", header, "LEFT", 2, 0)
+header.label = label
+
+local QuestToggle = CreateFrame("Button", "SteakQuestToggle", UIParent)
+QuestToggle:SetSize(20, 20)
+QuestToggle:SetPoint("RIGHT", header, "RIGHT", -5, 0)
+
+QuestToggle.text = QuestToggle:CreateFontString(nil, "OVERLAY")
+QuestToggle.text:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
+QuestToggle.text:SetPoint("CENTER")
+QuestToggle.text:SetText("-")
+
+QuestToggle:SetScript("OnClick", function(self, button)
+	self.expanded = self.expanded or true
+	
+	if self.expanded == true then
+		self.text:SetText("+")
+		self.expanded = nil
+		QuestList:SetHeight(GetScreenHeight() / 3)
+	else
+		self.text:SetText("-")
+		self.expanded = true
+		QuestList:SetHeight(0)
+	end
+end)
+
 local function CreateItemButton(parent)
     local btn = CreateFrame("Button", nil, parent, "SecureActionButtonTemplate")
     btn:SetSize(ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE)
@@ -34,7 +72,17 @@ end
 
 local function OnEvent(self, event, ...)
 	if WatchFrame:IsShown() then WatchFrame:Hide() end
-	
+
+	local numQuests = 0
+	local numMaxQuests = MAX_QUESTLOG_QUESTS or 25
+
+	for i = 1, GetNumQuestLogEntries() do
+		local title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID = GetQuestLogTitle(i)
+		if title and not isHeader then numQuests = numQuests + 1 end
+	end
+
+	header.label:SetText(("%d / %d"):format(numQuests, numMaxQuests))
+
 	if GetNumRaidMembers() > 0 then
 		self:Hide()
 	else
@@ -59,14 +107,14 @@ local function OnEvent(self, event, ...)
 				row = CreateFrame("Frame", nil, QuestList)
 				row:SetWidth(QUEST_LIST_WIDTH)
                 
-				row.title = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-				row.title:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINED")
+				row.title = row:CreateFontString(nil, "OVERLAY")
+				row.title:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
 				--row.title:SetPoint("TOPLEFT", row, "TOPLEFT", 5, -2)
 				row.title:SetPoint("TOPLEFT", row, "TOPLEFT", 25, -2)
 				row.title:SetJustifyH("LEFT")
                 
-				row.obj = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-				row.obj:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINED")
+				row.obj = row:CreateFontString(nil, "OVERLAY")
+				row.obj:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINE")
 				row.obj:SetPoint("TOPLEFT", row.title, "BOTTOMLEFT", 10, -4)
 				--row.obj:SetWidth(QUEST_LIST_WIDTH - 30)
 				row.obj:SetWidth(QUEST_LIST_WIDTH - 50)

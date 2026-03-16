@@ -14,7 +14,7 @@ function MapFrame_UpdateQuestIcons()
 		local poi = questDots[i]
 		
 		if not poi then
-			poi = CreateFrame("Frame", nil, MapFrameSC)
+			poi = CreateFrame("Button", nil, MapFrameSC)
 
 			poi:SetSize(24, 24)
 			poi:SetFrameLevel(Minimap:GetFrameLevel() + 1)
@@ -31,7 +31,7 @@ function MapFrame_UpdateQuestIcons()
 			num:SetTextColor(1, 1, 0)
 			poi.num = num
 
-			poi:EnableMouse(true)
+			--poi:EnableMouse(true)
 
 			poi:SetScript("OnEnter", function(self)
 				if self.questID then
@@ -110,7 +110,14 @@ local function OnEvent(self, event, ...)
 				WorldMapFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 				WORLDMAP_SETTINGS.size = mapSize
 				
-				MapFrame_UpdateQuestIcons()
+				self:SetScript("OnUpdate", function(self, elapsed)
+					self.timer = (self.timer or 0) + elapsed
+					if self.timer < 0.2 then return end
+					self.timer = 0
+					self:SetScript("OnUpdate", nil)
+
+					MapFrame_UpdateQuestIcons()
+				end)
 			end
 
 			MapFrame_UpdateQuestIcons()

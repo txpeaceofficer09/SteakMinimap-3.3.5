@@ -60,6 +60,8 @@ function SteakMap_UpdateReagentVendors()
 		if not icon then
 			icon = CreateFrame("Button", nil, MapFrameSC)
 			icon:SetSize(16, 16)
+			icon:SetFrameStrata(MapFrameSC:GetFrameStrata())
+			icon:SetFrameLevel(MapFrameSC:GetFrameLevel()+1)
 
 			local tex = icon:CreateTexture(nil, "OVERLAY")
 			tex:SetAllPoints()
