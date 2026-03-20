@@ -8,42 +8,43 @@ function MapFrame_UpdatePOI()
 	if not SteakMapConfigDB.showPOI then return end
 
 	for i=1,GetNumMapLandmarks() do
-		local poi = poiDots[i]
+		local icon = poiDots[i]
 		
-		if not poi then
-			local poi = CreateFrame("Button", nil, MapFrameSC)
+		if not icon then
+			icon = CreateFrame("Button", nil, MapFrameSC)
 
-			poi:SetSize(32, 32)
-			poi:SetFrameStrata(MapFrameSC:GetFrameStrata())
-			poi:SetFrameLevel(MapFrameSC:GetFrameLevel()+1)
+			icon:SetSize(32, 32)
+			icon:SetFrameStrata(MapFrameSC:GetFrameStrata())
+			icon:SetFrameLevel(MapFrameSC:GetFrameLevel()+1)
 
 			--poi:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-			poi:SetScript("OnEnter", WorldMapPOI_OnEnter)
-			poi:SetScript("OnLeave", WorldMapPOI_OnLeave)
-			poi:SetScript("OnClick", WorldMapPOI_OnClick)
+			icon:SetScript("OnEnter", WorldMapPOI_OnEnter)
+			icon:SetScript("OnLeave", WorldMapPOI_OnLeave)
+			icon:SetScript("OnClick", WorldMapPOI_OnClick)
 			
-			local tex = poi:CreateTexture(nil, "OVERLAY")
+			local tex = icon:CreateTexture(nil, "OVERLAY")
 			tex:SetSize(16, 16)
 			tex:SetPoint("CENTER", 0, 0)
 			tex:SetTexture("Interface\\Minimap\\POIIcons")
 			
-			poi.tex = tex
-			poiDots[i] = poi
+			icon.tex = tex
+			poiDots[i] = icon
 		end
 		
 		local name, description, textureIndex, x, y, mapLinkID = GetMapLandmarkInfo(i)
 		local x1, x2, y1, y2 = WorldMap_GetPOITextureCoords(textureIndex)
 		
-		poi.tex:SetTexCoord(x1, x2, y1, y2)
+		icon.tex:SetTexCoord(x1, x2, y1, y2)
+
 		x = x * MapFrameSC:GetWidth()
 		y = -y * MapFrameSC:GetHeight()
 		
-		poi:SetPoint("CENTER", MapFrameSC, "TOPLEFT", x, y)
-		poi.name = name
-		poi.description = description
-		poi.mapLinkID = mapLinkID
-		
-		poi:Show()
+		icon:SetPoint("CENTER", MapFrameSC, "TOPLEFT", x, y)
+		icon.name = name
+		icon.description = description
+		icon.mapLinkID = mapLinkID
+	
+		icon:Show()
 	end
 end
 

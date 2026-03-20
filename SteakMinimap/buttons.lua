@@ -54,27 +54,18 @@ function SteakMap_MoveMinimapButtons()
 		end
 	end
 
-	local sortTbl = {"GameTimeFrame", "MiniMapTrackingButton"}
-	local priority = {"MiniMapMailFrame", "MiniMapLFGFrame"}
+	local sortTbl = {"GameTimeFrame", "MiniMapTrackingButton", "MiniMapMailFrame", "MiniMapLFGFrame", "MiniMapBattlefieldFrame"}
 
 	local offset = 3
 
 	for k, v in pairs(frames) do
 		if tContains(sortTbl, v) then
 			-- Do nothing the frame is already there.
-		elseif _G[v]:IsShown() then
-			tinsert(sortTbl, offset, v)
-			if tContains(priority, v) then offset = offset + 1 end
-		else
+		elseif _G[v]:IsShown() and _G[v]:IsVisible() then
 			tinsert(sortTbl, v)
-		end
-		--[[
-		if not tContains(sortTbl, v) and _G[v]:IsVisible() then
-			tinsert(sortTbl, 3, v)
 		else
-			tinsert(sortTbl, v)
+			--tinsert(sortTbl, v)
 		end
-		]]
 	end
 	
 	for k, v in pairs(sortTbl) do

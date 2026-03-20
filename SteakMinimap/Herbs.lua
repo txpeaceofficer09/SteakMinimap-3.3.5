@@ -90,15 +90,16 @@ function SteakMap_UpdateHerbNodes()
 			icon:SetFrameStrata(MapFrameSC:GetFrameStrata())
 			icon:SetFrameLevel(MapFrameSC:GetFrameLevel()+1)
 
-			local tex = icon:CreateTexture(nil, "OVERLAY")
+			local tex = icon:CreateTexture(nil, "BACKGROUND")
 			tex:SetAllPoints()
 			--tex:SetTexture("Interface\\MINIMAP\\TRACKING\\ObjectHerb.blp")
 			local itemID = HERB_ITEM_IDS[v.name]
-			local iconPath = itemID and GetItemIcon(itemID) or "Interface\\MINIMAP\\TRACKING\\ObjectHerb.blp"
+			--local iconPath = itemID and GetItemIcon(itemID) or "Interface\\MINIMAP\\TRACKING\\ObjectHerb.blp"
+			local iconPath = "Interface\\AddOns\\SteakMinimap\\Herb\\"..v.name:gsub("'", ""):gsub("%s+", "_"):lower()..".tga"
 			tex:SetTexture(iconPath)
 			icon.tex = tex
 
-			icon.text = icon:CreateFontString(nil, "OVERLAY")
+			icon.text = icon:CreateFontString(nil, "ARTWORK")
 			icon.text:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 7, "OUTLINE")
 			icon.text:SetPoint("TOP", icon, "BOTTOM", 0, -2)
 			icon.text:Hide()
@@ -144,7 +145,7 @@ local function OnEvent(self, event, ...)
 		if not herb then return end
 
 		if herb:match("Lotus$") then return end
-		if herb:match("^Crystalized") then return end
+		if herb:match("^Crystallized") then return end
 
 		SaveHerbNode(herb)
 		SteakMap_UpdateHerbNodes()

@@ -12,6 +12,7 @@ buttons.lua
 Minimap.lua
 poi.lua
 Coords.lua
+ZoneText.lua
 QuestLog.lua
 Units.lua
 Herbs.lua

@@ -22,7 +22,7 @@ local function OnUpdate(self, elapsed)
 	local x, y = GetPlayerMapPosition("player")
 	
 	coordText:SetText(string.format("%.1f, %.1f", x * 100, y * 100))
-	coordFrame:SetWidth(coordText:GetWidth()+10)	
+	coordFrame:SetSize(math.max(coordFrame:GetWidth(), coordText:GetStringWidth()+10), coordText:GetHeight()+6)
 end
 
 coordFrame:SetScript("OnUpdate", OnUpdate)

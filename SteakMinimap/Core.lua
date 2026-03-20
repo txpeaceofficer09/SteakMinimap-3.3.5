@@ -1,3 +1,4 @@
+local mapBorder = CreateFrame("Frame", nil, UIParent)
 local f = CreateFrame("ScrollFrame", "MapFrame", UIParent)
 
 local SteakTracking = false
@@ -11,18 +12,28 @@ local TXTH = 256
 local MMAPW = 312
 local MMAPH = 220
 
+local PlayerArrow = nil
+local borderColor = RAID_CLASS_COLORS[select(2, UnitClass("player"))]
+
 f:EnableKeyboard(false)
 f:EnableMouse(true)
 f:EnableMouseWheel(true)
 
-f:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 21)
-f:SetSize(MMAPW, MMAPH)
-f:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
+mapBorder:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -1, 20)
+mapBorder:SetSize(MMAPW, MMAPH)
+mapBorder:SetBackdrop( { bgFile = "Interface\\ChatFrame\\ChatFrameBackground", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1, insets = { left = -1, right = -1, top = -1, bottom = -1 } } )
+mapBorder:SetBackdropColor(0, 0, 0, 0.8)
+mapBorder:SetBackdropBorderColor(borderColor.r or 1, borderColor.g or 0.5, borderColor.b or 0, 1)
+mapBorder:SetFrameStrata("LOW")
+
+f:SetPoint("TOPLEFT", mapBorder, "TOPLEFT", 1, -1)
+f:SetPoint("BOTTOMRIGHT", mapBorder, "BOTTOMRIGHT", -1, 1)
 
 f:SetFrameStrata("LOW")
---f:SetFrameLevel(25)
+f:SetFrameLevel(mapBorder:GetFrameLevel()+1)
 
 local sc = CreateFrame("Frame", "MapFrameSC", MapFrame)
+sc:SetFrameStrata("LOW")
 
 for i = 1, 12, 1 do
 	local t = sc:CreateTexture("MapFrameTexture"..i, "ARTWORK")
@@ -43,19 +54,6 @@ for i = 1, 12, 1 do
 end
 
 sc:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
-
-local PlayerArrow = CreateFrame("Frame", "SteakMinimapPlayerArrowFrame", MapFrameSC)
-PlayerArrow:SetSize(64, 64)
---PlayerArrow:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
-PlayerArrow:SetFrameStrata("HIGH")
-PlayerArrow:SetFrameLevel(MapFrameSC:GetFrameLevel()+10)
-
-PlayerArrow.texture = PlayerArrow:CreateTexture(nil, "OVERLAY")
-PlayerArrow.texture:SetAllPoints(PlayerArrow)
-PlayerArrow.texture:SetTexture("Interface\\AddOns\\SteakMiniMap\\Default.tga")
-
-PlayerArrow:Show()
-PlayerArrow.texture:Show()
 
 local function IsInCity()
     local channels = {GetChannelList()}
@@ -162,7 +160,20 @@ local function OnEvent(self, event, ...)
 		DurabilityFrame:ClearAllPoints()
 		DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
 		
-		Steak_UpdateMinimapTracking()
+		--Steak_UpdateMinimapTracking()
+		
+		if not PlayerArrow then
+			PlayerArrow = CreateFrame("Frame", "SteakMinimapPlayerArrowFrame", MapFrameSC)
+			PlayerArrow:SetSize(64, 64)
+			--PlayerArrow:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
+			--PlayerArrow:SetFrameStrata("HIGH")
+			PlayerArrow:SetFrameStrata("TOOLTIP")
+			--PlayerArrow:SetFrameLevel(MapFrameSC:GetFrameLevel()+10)
+			PlayerArrow:SetFrameLevel(9999)
+			PlayerArrow.texture = PlayerArrow:CreateTexture(nil, "OVERLAY")
+			PlayerArrow.texture:SetAllPoints(PlayerArrow)
+			PlayerArrow.texture:SetTexture("Interface\\AddOns\\SteakMiniMap\\Default.tga")
+		end
 	elseif event == "UPDATE_INVENTORY_DURABILITY" then
 		if not InCombatLockdown() then
 			DurabilityFrame:ClearAllPoints()
@@ -173,11 +184,12 @@ local function OnEvent(self, event, ...)
 	elseif event == "WORLD_MAP_UPDATE" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "WORLD_MAP_NAME_UPDATE" or event == "ZONE_CHANGED_NEW_AREA" then
 		MapFrame_UpdateTextures()
 	elseif event == "MINIMAP_PING" then
+		--[[
 		if not Ping then
 			local Ping = MapFrameSC:CreateTexture(nil, "OVERLAY")
 			Ping:SetSize(32, 32)
 			Ping:SetTexture("Interface\\Minimap\\MinimapPing") -- or your own
-			Ping:Hide()
+			--Ping:Hide()
 		end
 
 		local unit, x, y = ...
@@ -195,6 +207,7 @@ local function OnEvent(self, event, ...)
 			
 			self:Hide()
 		end)
+		]]
 	elseif event == "MINIMAP_UPDATE_TRACKING" then
 		Steak_UpdateMinimapTracking()
 	end
@@ -216,7 +229,7 @@ f:RegisterEvent("MINIMAP_PING")
 
 f:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
 
-f:RegisterEvent("MINIMAP_UPDATE_TRACKING")
+--f:RegisterEvent("MINIMAP_UPDATE_TRACKING")
 
 f:SetScript("OnEvent", OnEvent)
 f:SetScript("OnUpdate", function(self, elapsed)
@@ -225,15 +238,9 @@ f:SetScript("OnUpdate", function(self, elapsed)
 	if unitX == 0 and unitY == 0 then
 		if IsInInstance() then MapFrame_UpdateTextures() end
 
-		PlayerArrow:Hide()
+		if PlayerArrow then PlayerArrow:Hide() end
 		return
 	end
-
-	PlayerArrow:Show()
-
-	local facing = GetPlayerFacing()
-
-	if facing then PlayerArrow.texture:SetRotation(facing) end
 
 	local mapWidth = MapFrameSC:GetWidth()
 	local mapHeight = MapFrameSC:GetHeight()
@@ -252,8 +259,16 @@ f:SetScript("OnUpdate", function(self, elapsed)
 	local mmX = (unitX * mapWidth) + offsetX
 	local mmY = (-unitY * mapHeight) - offsetY
 
-	PlayerArrow:ClearAllPoints()
-	PlayerArrow:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
+	if PlayerArrow then
+		PlayerArrow:Show()
+
+		local facing = GetPlayerFacing()
+
+		if facing then PlayerArrow.texture:SetRotation(facing) end
+
+		PlayerArrow:ClearAllPoints()
+		PlayerArrow:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
+	end
 end)
 
 f:SetScript("OnMouseWheel", function(self, delta)
