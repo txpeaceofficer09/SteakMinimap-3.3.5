@@ -16,7 +16,7 @@ function SteakMap_MoveMinimapButtons()
 		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
 			v:SetParent(MapFrame)
 			v:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
-			v:SetPoint("TOPLEFT", MapFrame, "TOPLEFT", 0, 0)
+			v:SetPoint("TOPRIGHT", MapFrame, "TOPRIGHT", 0, 0)
 		elseif v:GetName() == nil or tContains(hideThese, v:GetName()) or v:GetName():match("^QuestieFrame") then
 			v:Hide()
 		elseif v:GetName() == "MinimapPing" then
@@ -32,7 +32,7 @@ function SteakMap_MoveMinimapButtons()
 		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
 			v:SetParent(MapFrame)
 			v:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
-			v:SetPoint("TOPLEFT", MapFrame, "TOPLEFT", 0, 0)
+			v:SetPoint("TOPRIGHT", MapFrame, "TOPRIGHT", 0, 0)
 		elseif tContains(hideThese, v:GetName()) then
 			v:Hide()
 		else
@@ -46,7 +46,7 @@ function SteakMap_MoveMinimapButtons()
 		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
 			v:SetParent(MapFrame)
 			v:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
-			v:SetPoint("TOPLEFT", MapFrame, "TOPLEFT", 0, 0)
+			v:SetPoint("TOPRIGHT", MapFrame, "TOPRIGHT", 0, 0)
 		elseif tContains(hideThese, v:GetName()) then
 			v:Hide()
 		else

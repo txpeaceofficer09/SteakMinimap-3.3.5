@@ -11,11 +11,11 @@ function MapFrame_UpdatePOI()
 		local icon = poiDots[i]
 		
 		if not icon then
-			icon = CreateFrame("Button", nil, MapFrameSC)
+			icon = CreateFrame("Button", nil, MapFrameSC.overlay)
 
 			icon:SetSize(32, 32)
-			icon:SetFrameStrata(MapFrameSC:GetFrameStrata())
-			icon:SetFrameLevel(MapFrameSC:GetFrameLevel()+1)
+			icon:SetFrameStrata(MapFrameSC.overlay:GetFrameStrata())
+			icon:SetFrameLevel(MapFrameSC.overlay:GetFrameLevel()+1)
 
 			--poi:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 			icon:SetScript("OnEnter", WorldMapPOI_OnEnter)

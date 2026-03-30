@@ -1,7 +1,7 @@
 local coordFrame = CreateFrame("Frame", nil, UIParent)
 
 coordFrame:SetSize(80, 20)
-coordFrame:SetPoint("BOTTOMLEFT", MapFrame, "BOTTOMLEFT", 0, 0)
+coordFrame:SetPoint("BOTTOMLEFT", MapFrame, "BOTTOMLEFT", 4, 4)
 coordFrame:SetFrameStrata("HIGH")
 coordFrame:SetFrameLevel(MapFrame:GetFrameLevel()+2)
 coordFrame:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )

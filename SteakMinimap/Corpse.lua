@@ -1,6 +1,6 @@
 local f = CreateFrame("Frame", nil, UIParent)
 
-local corpse = CreateFrame("Frame", "SteakCorpseIcon", MapFrameSC, "WorldMapCorpseTemplate")
+local corpse = CreateFrame("Frame", "SteakCorpseIcon", MapFrameSC.overlay, "WorldMapCorpseTemplate")
 --local corpse = CreateFrame("Frame", "SteakCorpse", MapFrameSC, "SecureHandlerStateTemplate")
 --RegisterStateDriver(corpse, "visibility", "[@player,nodead] hide; [@player,dead] show; hide")
 MapFrameSC.corpse = corpse

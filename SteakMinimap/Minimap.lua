@@ -1,4 +1,5 @@
-local mm = CreateFrame("Minimap", "SteakMinimap", MapFrameSC)
+local f = CreateFrame("Frame", nil, UIParent)
+local mm = SteakMinimap
 
 local zoneOverride = {
 	["Barrens"] = {
@@ -13,9 +14,21 @@ local zoneOverride = {
 			["Zoom"] = 1
 		}
 	},
+	["DeadwindPass"] = {
+		["Minimap"] = {
+			["Size"] = { width = 152, height = 152 },
+			["Zoom"] = 1
+		}
+	},
 	["Desolace"] = {
 		["Minimap"] = {
 			["Size"] = { width = 90, height = 90 },
+			["Zoom"] = 1
+		}
+	},
+	["DunMorogh"] = {
+		["Minimap"] = {
+			["Size"] = { width = 82, height = 82 },
 			["Zoom"] = 1
 		}
 	},
@@ -51,7 +64,7 @@ local zoneOverride = {
 	},
 	["SholazarBasin"] = {
 		["Minimap"] = {
-			["Size"] = { width = 90, height = 90 },
+			["Size"] = { width = 92, height = 92 },
 			["Zoom"] = 1
 		}
 	},
@@ -69,7 +82,7 @@ local zoneOverride = {
 	},
 	["Undercity"] = {
 		["Minimap"] = {
-			["Size"] = { width = 130, height = 130 },
+			["Size"] = { width = 253, height = 253 },
 			["Zoom"] = 1
 		}
 	},
@@ -97,9 +110,17 @@ end
 
 function SteakMap_UpdateMinimap()
 	local mapFileName = GetMapInfo()
+	local areaID = GetCurrentMapAreaID()
 
 	if not InCombatLockdown() then
-		if mapFileName and zoneOverride[mapFileName] then
+		if areaID and SteakMinimapDB.zoneOverride[areaID] then
+			local override = SteakMinimapDB.zoneOverride[areaID]
+			local zoom = override.Minimap.Zoom or 1
+			local size = override.Minimap.Size or { width = 100, height = 100 }
+
+			mm:SetZoom(zoom)
+			mm:SetSize(size.width, size.height)
+		elseif mapFileName and zoneOverride[mapFileName] then
 			local override = zoneOverride[mapFileName]
 			local zoom = override.Minimap.Zoom or 1
 			local size = override.Minimap.Size or {width = 100, height = 100}
@@ -122,38 +143,45 @@ end
 
 local function OnEvent(self, event, ...)
 	if event == "PLAYER_ENTERING_WORLD" then
+		--[[
+		local mm = CreateFrame("Minimap", "SteakMinimap", MapFrameSC)
 		mm:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
+		mm:SetFrameStrata("MEDIUM")
 		TimeManagerClockButton:Hide()
 		MinimapCluster:ClearAllPoints()
 		MinimapCluster:SetPoint("TOPLEFT", UIParent, "TOPRIGHT", 0, 0)
 		MinimapCluster:Hide()
 		Minimap:Hide()
 		mm:SetAlpha(0)
+		]]
 		--mm:SetMaskTexture("Interface\\Buttons\\WHITE8X8")
 	elseif event == "PLAYER_LOGIN" then
-		mm:SetMovable(true)
-		mm:SetUserPlaced(true)
+		--mm:SetMovable(true)
+		--mm:SetUserPlaced(true)
 		--mm:SetParent(MapFrameSC)
+	elseif event == "VARIABLES_LOADED" then
+		SteakMinimapDB.zoneOverride = SteakMinimapDB.zoneOverride or {}
 	elseif event == "WORLD_MAP_UPDATE" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "WORLD_MAP_NAME_UPDATE" or event == "ZONE_CHANGED_NEW_AREA" then
 		MapFrame_UpdateTextures()
 	end
 end
 
-mm:RegisterEvent("PLAYER_LOGIN")
-mm:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("PLAYER_LOGIN")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("VARIABLES_LOADED")
 
-mm:RegisterEvent("WORLD_MAP_UPDATE")
-mm:RegisterEvent("ZONE_CHANGED")
-mm:RegisterEvent("ZONE_CHANGED_INDOORS")
-mm:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-mm:RegisterEvent("CLOSE_WORLD_MAP")
-mm:RegisterEvent("WORLD_MAP_NAME_UPDATE")
+f:RegisterEvent("WORLD_MAP_UPDATE")
+f:RegisterEvent("ZONE_CHANGED")
+f:RegisterEvent("ZONE_CHANGED_INDOORS")
+f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+f:RegisterEvent("CLOSE_WORLD_MAP")
+f:RegisterEvent("WORLD_MAP_NAME_UPDATE")
 
 --f:RegisterEvent("MINIMAP_UPDATE_TRACKING")
 
-mm:SetScript("OnEvent", OnEvent)
+f:SetScript("OnEvent", OnEvent)
 
-mm:SetScript("OnUpdate", function(self, elapsed)
+f:SetScript("OnUpdate", function(self, elapsed)
 	local unitX, unitY = GetPlayerMapPosition("player")
 
 	if unitX == 0 and unitY == 0 then return end
@@ -162,9 +190,9 @@ mm:SetScript("OnUpdate", function(self, elapsed)
 	SteakMap_UpdateMinimap()
 
 	if IsAltKeyDown() then
-		self:SetAlpha(1)
+		mm:SetAlpha(1)
 	else
-		self:SetAlpha(0)
+		mm:SetAlpha(0)
 	end
 
 	local mapWidth = MapFrameSC:GetWidth()
@@ -176,6 +204,40 @@ mm:SetScript("OnUpdate", function(self, elapsed)
 	local mmX = (unitX * mapWidth) + offsetX
 	local mmY = (-unitY * mapHeight) - offsetY
 
-	self:ClearAllPoints()
-	self:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
+	mm:ClearAllPoints()
+	mm:SetPoint("CENTER", MapFrameSC, "TOPLEFT", mmX, mmY)
 end)
+
+SLASH_STEAKMINIMAP1 = "/steakminimap"
+SLASH_STEAKMINIMAP2 = "/smm"
+
+SlashCmdList["STEAKMINIMAP"] = function(msg)
+    local size = tonumber(msg)
+    if not size then
+        --print("|cffff5555Usage: /smm <size>|r")
+	print("Minimap Size: ", SteakMinimap:GetSize())
+        return
+    end
+
+    if SteakMinimap then
+	local mapFilename = GetMapInfo()
+	local areaID = GetCurrentMapAreaID()
+
+	SteakMinimapDB = SteakMinimapDB or {}
+	SteakMinimapDB.zoneOverride = SteakMinimapDB.zoneOverride or {}
+	SteakMinimapDB.zoneOverride[areaID] = SteakMinimapDB.zoneOverride[areaID] or {
+		Minimap = {
+			Size = { width = size, height = size }
+		}
+	}
+
+	zoneOverride[mapFilename] = zoneOverride[mapFilename] or { Minimap = { Size = { width = size, height = size }, Zoom = 1 } }
+	zoneOverride[mapFilename].Minimap.Size = { width = size, height = size }
+        SteakMinimap:SetSize(size, size)
+
+        print("|cff55ff55SteakMinimap size set to|r", size)
+    else
+        print("|cffff5555SteakMinimap frame not found.|r")
+    end
+end
+

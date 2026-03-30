@@ -55,6 +55,29 @@ end
 
 sc:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
 
+local overlay = CreateFrame("Frame", nil, MapFrameSC)
+overlay:SetAllPoints()
+sc.overlay = overlay
+
+local mm = CreateFrame("Minimap", "SteakMinimap", MapFrameSC)
+mm:SetFrameLevel(MapFrameSC.overlay:GetFrameLevel()+2)
+mm:SetFrameStrata("MEDIUM")
+--TimeManagerClockButton:Hide()
+--MinimapCluster:ClearAllPoints()
+--MinimapCluster:SetPoint("TOPLEFT", UIParent, "TOPRIGHT", 0, 0)
+--MinimapCluster:Hide()
+--Minimap:Hide()
+mm:SetAlpha(0)
+
+PlayerArrow = CreateFrame("Frame", "SteakMinimapPlayerArrowFrame", MapFrameSC)
+PlayerArrow:SetSize(64, 64)
+--PlayerArrow:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
+PlayerArrow:SetFrameStrata("HIGH")
+PlayerArrow:SetFrameLevel(9999)
+PlayerArrow.texture = PlayerArrow:CreateTexture(nil, "OVERLAY")
+PlayerArrow.texture:SetAllPoints(PlayerArrow)
+PlayerArrow.texture:SetTexture("Interface\\AddOns\\SteakMiniMap\\Default.tga")
+
 local function IsInCity()
     local channels = {GetChannelList()}
     
@@ -155,15 +178,17 @@ local function OnEvent(self, event, ...)
 		MapFrameSC:SetSize(MAPW, MAPH)
 		self:SetScrollChild(MapFrameSC)
 		--Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8X8")
-		self:Show()
+		--self:Show()
 
-		DurabilityFrame:ClearAllPoints()
-		DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
+		--DurabilityFrame:ClearAllPoints()
+		--DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
 		
 		--Steak_UpdateMinimapTracking()
 		
+		--[[
 		if not PlayerArrow then
-			PlayerArrow = CreateFrame("Frame", "SteakMinimapPlayerArrowFrame", MapFrameSC)
+			--PlayerArrow = CreateFrame("Frame", "SteakMinimapPlayerArrowFrame", MapFrameSC)
+			PlayerArrow = CreateFrame("Frame", "SteakMinimapPlayerArrowFrame", MapFrame)
 			PlayerArrow:SetSize(64, 64)
 			--PlayerArrow:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
 			--PlayerArrow:SetFrameStrata("HIGH")
@@ -174,12 +199,14 @@ local function OnEvent(self, event, ...)
 			PlayerArrow.texture:SetAllPoints(PlayerArrow)
 			PlayerArrow.texture:SetTexture("Interface\\AddOns\\SteakMiniMap\\Default.tga")
 		end
+		]]
 	elseif event == "UPDATE_INVENTORY_DURABILITY" then
 		if not InCombatLockdown() then
-			DurabilityFrame:ClearAllPoints()
-			DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
+			--DurabilityFrame:ClearAllPoints()
+			--DurabilityFrame:SetPoint("TOPRIGHT", MapFrame, "TOPLEFT", -5, 0)
 		end
 	elseif event == "VARIABLES_LOADED" then
+		SteakMinimapDB = SteakMinimapDB or {}
 		SteakMinimapZones = SteakMinimapZones or {}
 	elseif event == "WORLD_MAP_UPDATE" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "WORLD_MAP_NAME_UPDATE" or event == "ZONE_CHANGED_NEW_AREA" then
 		MapFrame_UpdateTextures()

@@ -17,12 +17,17 @@ local reagents = {
 }
 
 local function IsReagentVendor()
+	--[[
 	for i = 1, GetMerchantNumItems() do
 		local name = GetMerchantItemInfo(i)
 		for _, item in ipairs(reagents) do
 			if item == name then return true end
 		end
 	end
+	]]
+	local flags = UnitOccupation("target")
+
+	if flags and bit.band(flags, 0x00000800) ~= 0 then return true end
 
 	return false
 end
@@ -58,10 +63,10 @@ function SteakMap_UpdateReagentVendors()
 		local icon = ReagentIcons[i]
 
 		if not icon then
-			icon = CreateFrame("Button", nil, MapFrameSC)
+			icon = CreateFrame("Button", nil, MapFrameSC.overlay)
 			icon:SetSize(16, 16)
-			icon:SetFrameStrata(MapFrameSC:GetFrameStrata())
-			icon:SetFrameLevel(MapFrameSC:GetFrameLevel()+1)
+			icon:SetFrameStrata(MapFrameSC.overlay:GetFrameStrata())
+			icon:SetFrameLevel(MapFrameSC.overlay:GetFrameLevel()+1)
 
 			local tex = icon:CreateTexture(nil, "OVERLAY")
 			tex:SetAllPoints()

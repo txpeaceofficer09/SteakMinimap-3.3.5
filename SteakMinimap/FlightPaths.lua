@@ -17,10 +17,10 @@ function SteakMap_UpdateFlightPaths()
 		local icon = fpIcons[index]
 		
 		if not icon then
-			icon = CreateFrame("Button", nil, MapFrameSC)
+			icon = CreateFrame("Button", nil, MapFrameSC.overlay)
 			icon:SetSize(16, 16)
-			icon:SetFrameStrata(MapFrameSC:GetFrameStrata())
-			icon:SetFrameLevel(MapFrameSC:GetFrameLevel()+1)
+			icon:SetFrameStrata(MapFrameSC.overlay:GetFrameStrata())
+			icon:SetFrameLevel(MapFrameSC.overlay:GetFrameLevel()+1)
 
 			local tex = icon:CreateTexture(nil, "BACKGROUND")
 			tex:SetAllPoints(icon)

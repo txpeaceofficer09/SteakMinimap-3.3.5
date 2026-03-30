@@ -34,17 +34,17 @@ function SteakMap_UpdateRepairVendors()
 		local icon = repairIcons[i]
 
 		if not icon then
-			icon = CreateFrame("Button", nil, MapFrameSC)
+			icon = CreateFrame("Button", nil, MapFrameSC.overlay)
 			icon:SetSize(16, 16)
-			icon:SetFrameStrata(MapFrameSC:GetFrameStrata())
-			icon:SetFrameLevel(MapFrameSC:GetFrameLevel()+1)
+			icon:SetFrameStrata(MapFrameSC.overlay:GetFrameStrata())
+			icon:SetFrameLevel(MapFrameSC.overlay:GetFrameLevel()+1)
 
-			local tex = icon:CreateTexture(nil, "OVERLAY")
+			local tex = icon:CreateTexture(nil, "BACKGROUND")
 			tex:SetAllPoints()
 			tex:SetTexture("Interface\\MINIMAP\\TRACKING\\Repair.blp")
 			icon.tex = tex
 
-			icon.text = icon:CreateFontString(nil, "OVERLAY")
+			icon.text = icon:CreateFontString(nil, "ARTWORK")
 			icon.text:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 7, "OUTLINE")
 			icon.text:SetPoint("TOP", icon, "BOTTOM", 0, -2)
 			icon.text:Hide()
@@ -72,7 +72,7 @@ local function OnEvent(self, event, ...)
 	if event == "VARIABLES_LOADED" then
 		SteakRepairVendorDB = SteakRepairVendorDB or {}
 	elseif event == "MERCHANT_SHOW" then
-		SaveRepairVendor()
+		if UnitName("target") ~= "Jeeves" then SaveRepairVendor() end
 
 		SteakMap_UpdateRepairVendors()
 	else

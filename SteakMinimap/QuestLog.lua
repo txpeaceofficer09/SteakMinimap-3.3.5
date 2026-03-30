@@ -2,6 +2,9 @@ local QUEST_LIST_WIDTH = (MapFrame and MapFrame:GetWidth() > 0) and MapFrame:Get
 local QUEST_SPACING = 10
 local ITEM_BUTTON_SIZE = 22
 
+local _, class = UnitClass("player")
+local borderColor = RAID_CLASS_COLORS[class]
+
 local QuestListParent = CreateFrame("ScrollFrame", "SteakQuestListParent", UIParent)
 QuestListParent:SetSize(QUEST_LIST_WIDTH, GetScreenHeight() / 3)
 QuestListParent:SetPoint("BOTTOMLEFT", MapFrame, "TOPLEFT", 0, 10)
@@ -12,20 +15,20 @@ QuestListParent.bg:SetTexture(0, 0, 0, 0.5)
 ]]
 
 local QuestList = CreateFrame("Frame", "SteakQuestList", QuestListParent)
+
 QuestList:SetSize(QUEST_LIST_WIDTH, 1)
 --QuestList:SetPoint("BOTTOMLEFT", MapFrame, "TOPLEFT", 0, 10)
 QuestListParent:SetScrollChild(QuestList)
 QuestList.rows = {}
 
-local header = CreateFrame("Frame", "SteakQuestHeader", UIParent)
-header:SetPoint("BOTTOMLEFT", QuestListParent, "TOPLEFT", 0, 2)
-header:SetPoint("BOTTOMRIGHT", QuestListParent, "TOPRIGHT", 0, 2)
-header:SetHeight(20)
+local header = CreateFrame("Frame", "SteakQuestHeader", QuestListParent)
 
-local bg = header:CreateTexture(nil, "BACKGROUND")
-bg:SetTexture(0.5, 0.5, 0.5, 0.5)
-bg:SetAllPoints()
-header.bg = bg
+header:SetPoint("BOTTOMLEFT", QuestListParent, "TOPLEFT", 0, 4)
+header:SetPoint("BOTTOMRIGHT", QuestListParent, "TOPRIGHT", 0, 4)
+header:SetHeight(20)
+header:SetBackdrop( { bgFile = "Interface\\ChatFrame\\ChatFrameBackground", edgeFile = "Interface\\Buttons\\WHITE8x8", tile = true, tileSize = 32, edgeSize = 1, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
+header:SetBackdropColor(0.2, 0.2, 0.2, 1)
+header:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, 1)
 
 local label = header:CreateFontString(nil, "OVERLAY")
 label:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
