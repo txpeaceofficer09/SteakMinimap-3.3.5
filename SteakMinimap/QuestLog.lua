@@ -1,7 +1,8 @@
+local f = CreateFrame("Frame")
+
 local QUEST_LIST_WIDTH = (MapFrame and MapFrame:GetWidth() > 0) and MapFrame:GetWidth() or 312
 local QUEST_SPACING = 10
 local ITEM_BUTTON_SIZE = 22
-
 local _, class = UnitClass("player")
 local borderColor = RAID_CLASS_COLORS[class]
 
@@ -185,19 +186,23 @@ local function OnEvent(self, event, ...)
 			if row:IsShown() then height = height + row:GetHeight() end
 		end
 
-		QuestList:SetHeight(height)
-		local maxHeight = GetScreenHeight() / 3
+		if not InCombatLockdown() then
+			QuestList:SetHeight(height)
+			local maxHeight = GetScreenHeight() / 3
 
-		QuestListParent:SetHeight(math.min(height+QUEST_SPACING+5, maxHeight))
+			QuestListParent:SetHeight(math.min(height+QUEST_SPACING+5, maxHeight))
+		end
 	end
 end
 
-local f = CreateFrame("Frame")
 f:RegisterEvent("QUEST_LOG_UPDATE")
 f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 f:RegisterEvent("ZONE_CHANGED")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("UNIT_QUEST_LOG_CHANGED")
+f:RegisterEvent("RAID_ROSTER_UPDATE")
+f:RegisterEvent("PARTY_MEMBERS_CHANGED")
+f:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 f:SetScript("OnEvent", OnEvent)
 
@@ -205,6 +210,8 @@ WatchFrame:HookScript("OnShow", function(self) self:Hide() end)
 
 QuestListParent:EnableMouseWheel(true)
 QuestListParent:SetScript("OnMouseWheel", function(self, delta)
+	if InCombatLockdown() then return end
+
 	local current = self:GetVerticalScroll()
 	local step = 30
 	local max = self:GetVerticalScrollRange()

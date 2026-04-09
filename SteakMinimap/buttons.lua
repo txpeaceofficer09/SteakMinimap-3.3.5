@@ -4,7 +4,7 @@ MMBF:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, 0)
 
 function SteakMap_MoveMinimapButtons()
 	local frames = {}
-	local kids = {Minimap:GetChildren()}
+	--local kids = {Minimap:GetChildren()}
 
 	local hideThese = {"MinimapBackdrop", "TimeManagerClockButton", "MinimapZoomOut", "MinimapZoomIn", "MiniMapWorldMapButton", "MinimapZoneTextButton"}
 
@@ -12,6 +12,7 @@ function SteakMap_MoveMinimapButtons()
 	--GameTimeFrame:ClearAllPoints()
 	--GameTimeFrame:SetPoint("TOPRIGHT", MMBF, "TOPRIGHT", 0, 0)
 
+	--[[
 	for k, v in pairs(kids) do
 		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
 			v:SetParent(MapFrame)
@@ -25,6 +26,7 @@ function SteakMap_MoveMinimapButtons()
 			tinsert(frames, v:GetName())
 		end
 	end
+	]]
 
 	kids = {MinimapCluster:GetChildren()}
 
@@ -118,3 +120,9 @@ MMBF:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 MMBF:SetScript("OnEvent", OnEvent)
 MMBF:SetScript("OnUpdate", OnUpdate)
+
+MiniMapInstanceDifficulty:HookScript("OnShow", function(self)
+	self:ClearAllPoints()
+	self:SetParent(MapFrame)
+	self:SetPoint("TOPRIGHT", MapFrame, "TOPRIGHT", 0, 0)
+end)
