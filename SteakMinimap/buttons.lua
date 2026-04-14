@@ -32,9 +32,12 @@ function SteakMap_MoveMinimapButtons()
 
 	for k, v in pairs(kids) do
 		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
-			v:SetParent(MapFrame)
-			v:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
-			v:SetPoint("TOPRIGHT", MapFrame, "TOPRIGHT", 0, 0)
+			--v:SetParent(MapFrame)
+			v:SetParent(mapBorder)
+			--v:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
+			v:SetFrameLevel(mapBorder:GetFrameLevel()+2)
+			--v:SetPoint("TOPRIGHT", MapFrame, "TOPRIGHT", 0, 0)
+			v:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
 		elseif tContains(hideThese, v:GetName()) then
 			v:Hide()
 		else
@@ -46,9 +49,12 @@ function SteakMap_MoveMinimapButtons()
 
 	for k, v in pairs(kids) do
 		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
-			v:SetParent(MapFrame)
-			v:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
-			v:SetPoint("TOPRIGHT", MapFrame, "TOPRIGHT", 0, 0)
+			--v:SetParent(MapFrame)
+			v:SetParent(mapBorder)
+			--v:SetFrameLevel(MapFrameSC:GetFrameLevel()+2)
+			v:SetFrameLevel(mapBorder:GetFrameLevel()+2)
+			--v:SetPoint("TOPRIGHT", MapFrame, "TOPRIGHT", 0, 0)
+			v:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
 		elseif tContains(hideThese, v:GetName()) then
 			v:Hide()
 		else
@@ -123,6 +129,8 @@ MMBF:SetScript("OnUpdate", OnUpdate)
 
 MiniMapInstanceDifficulty:HookScript("OnShow", function(self)
 	self:ClearAllPoints()
-	self:SetParent(MapFrame)
-	self:SetPoint("TOPRIGHT", MapFrame, "TOPRIGHT", 0, 0)
+	--self:SetParent(MapFrame)
+	self:SetParent(mapBorder)
+	--self:SetPoint("TOPRIGHT", MapFrame, "TOPRIGHT", 0, 0)
+	self:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
 end)

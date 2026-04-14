@@ -65,7 +65,8 @@ local function SaveHerbNode(herbName)
 	SteakHerbDB[mapID] = SteakHerbDB[mapID] or {}
 
 	for _, v in ipairs(SteakHerbDB[mapID]) do
-		if v.name == herbName and math.abs(v.x - x) < 0.01 and math.abs(v.y - y) < 0.01 then
+		--if v.name == herbName and math.abs(v.x - x) < 0.01 and math.abs(v.y - y) < 0.01 then
+		if v.name == herbName and math.abs(v.x - x) < 0.002 and math.abs(v.y - y) < 0.002 then
 			return
 		end
 	end

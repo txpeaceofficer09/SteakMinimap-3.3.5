@@ -7,17 +7,17 @@
 ## OptionalDeps: GatherMate
 ## SavedVariables: SteakMinimapDB, SteakMinimapZones, SteakFlightPathDB, SteakRepairVendorDB, SteakReagentVendorDB, SteakHerbDB, SteakMapConfigDB
 Core.lua
-Corpse.lua
-buttons.lua
-Minimap.lua
-poi.lua
-Coords.lua
-ZoneText.lua
-QuestLog.lua
-Units.lua
-Herbs.lua
-FlightPaths.lua
-QuestIcons.lua
-Repair.lua
-Questie.lua
-Options.lua
+#Corpse.lua
+#buttons.lua
+#Minimap.lua
+#poi.lua
+#Coords.lua
+#ZoneText.lua
+#QuestLog.lua
+#Units.lua
+#Herbs.lua
+#FlightPaths.lua
+#QuestIcons.lua
+#Repair.lua
+#Questie.lua
+#Options.lua
