@@ -52,7 +52,21 @@ local function MoveMinimapButtons()
 
 	local hideThese = {"MinimapBackdrop", "TimeManagerClockButton", "MinimapZoomOut", "MinimapZoomIn", "MiniMapWorldMapButton", "MinimapZoneTextButton"}
 
-	local kids = {MinimapCluster:GetChildren()}
+	local kids = {Minimap:GetChildren()}
+
+	for k, v in pairs(kids) do
+		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
+			v:SetParent(mapBorder)
+			v:SetFrameLevel(mapBorder:GetFrameLevel()+2)
+			v:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
+		elseif tContains(hideThese, v:GetName()) then
+			v:Hide()
+		else
+			tinsert(frames, v:GetName())
+		end
+	end
+
+	kids = {MinimapCluster:GetChildren()}
 
 	for k, v in pairs(kids) do
 		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
