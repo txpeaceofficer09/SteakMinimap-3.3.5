@@ -61,7 +61,7 @@ local function MoveMinimapButtons()
 			v:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
 		elseif tContains(hideThese, v:GetName()) then
 			v:Hide()
-		else
+		elseif v:GetName() ~= nil and not v:GetName():match("^Questie") then
 			tinsert(frames, v:GetName())
 		end
 	end
