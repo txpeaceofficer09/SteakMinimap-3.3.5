@@ -61,7 +61,7 @@ local function MoveMinimapButtons()
 			v:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
 		elseif tContains(hideThese, v:GetName()) then
 			v:Hide()
-		elseif v:GetName() ~= nil and not v:GetName():match("^Questie") then
+		elseif v:GetName() ~= nil and not v:GetName():match("^Questie") and not v:GetName() == "MinimapPing" then
 			tinsert(frames, v:GetName())
 		end
 	end
