@@ -15,7 +15,8 @@ Core.lua
 #ZoneText.lua
 #QuestLog.lua
 #Units.lua
-#Herbs.lua
+Herbs.lua
+Mine.lua
 #FlightPaths.lua
 #QuestIcons.lua
 #Repair.lua

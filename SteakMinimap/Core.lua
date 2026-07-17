@@ -48,77 +48,70 @@ mmbf:SetSize(50, 50)
 mmbf:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, 0)
 
 local function MoveMinimapButtons()
+	--print("MoveMinimapButtons")
+
 	local frames = {}
 
-	local hideThese = {"MinimapBackdrop", "TimeManagerClockButton", "MinimapZoomOut", "MinimapZoomIn", "MiniMapWorldMapButton", "MinimapZoneTextButton"}
+	if RollForMinimapButton then
+		table.insert(frames, RollForMinimapButton)
+	end
 
-	local kids = {Minimap:GetChildren()}
+	local hideThese = {MinimapBackdrop, TimeManagerClockButton, MinimapZoomOut, MinimapZoomIn, MiniMapWorldMapButton, MinimapZoneTextButton}
+	local difficulty = {GuildInstanceDifficulty, MiniMapInstanceDifficulty}
 
-	for k, v in pairs(kids) do
-		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
-			v:SetParent(mapBorder)
-			v:SetFrameLevel(mapBorder:GetFrameLevel()+2)
-			v:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
-		elseif tContains(hideThese, v:GetName()) then
-			v:Hide()
-		elseif v:GetName() ~= nil and not v:GetName():match("^Questie") and not v:GetName() == "MinimapPing" then
-			tinsert(frames, v:GetName())
+	local parts = {Minimap, MinimapCluster, MinimapBackdrop}
+
+	for _, part in pairs(parts) do
+		local kids = {part:GetChildren()}
+
+		for k, button in pairs(kids) do
+			if tContains(difficulty, button) then
+				button:SetParent(mapBorder)
+				button:SetFrameLevel(mapBorder:GetFrameLevel()+2)
+				button:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
+			elseif tContains(hideThese, button) then
+				button:Hide()
+			elseif button and ( button:GetName() ~= nil and not button:GetName():match("^Questie") ) and button ~= MinimapPing then
+				table.insert(frames, button)
+			end
 		end
 	end
 
-	kids = {MinimapCluster:GetChildren()}
+	local sortTbl = {GameTimeFrame, MiniMapTrackingButton, MiniMapMailFrame, MiniMapLFGFrame, MiniMapBattlefieldFrame}
+	--local sortTbl = {GameTimeFrame, MiniMapTrackingButton}
+	local priority = {MiniMapMailFrame, MiniMapLFGFrame, MiniMapBattlefieldFrame}
 
-	for k, v in pairs(kids) do
-		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
-			v:SetParent(mapBorder)
-			v:SetFrameLevel(mapBorder:GetFrameLevel()+2)
-			v:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
-		elseif tContains(hideThese, v:GetName()) then
-			v:Hide()
-		else
-			tinsert(frames, v:GetName())
-		end
-	end
-
-	kids = {MinimapBackdrop:GetChildren()}
-
-	for k, v in pairs(kids) do
-		if v:GetName() == "GuildInstanceDifficulty" or v:GetName() == "MiniMapInstanceDifficulty" then
-			v:SetParent(mapBorder)
-			v:SetFrameLevel(mapBorder:GetFrameLevel()+2)
-			v:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
-		elseif tContains(hideThese, v:GetName()) then
-			v:Hide()
-		else
-			tinsert(frames, v:GetName())
-		end
-	end
-
-	local sortTbl = {"GameTimeFrame", "MiniMapTrackingButton", "MiniMapMailFrame", "MiniMapLFGFrame", "MiniMapBattlefieldFrame"}
-
-	local offset = 3
-
-	for k, v in pairs(frames) do
-		if tContains(sortTbl, v) then
+	for _, button in pairs(frames) do
+		--if tContains(sortTbl, button) then
 			-- Do nothing the frame is already there.
-		elseif _G[v]:IsShown() and _G[v]:IsVisible() then
-			tinsert(sortTbl, v)
-		else
-			--tinsert(sortTbl, v)
-		end
+		--elseif button:IsShown() and button:IsVisible() then
+		--	table.insert(sortTbl, button)
+		--else
+			--table.insert(sortTbl, button)
+		--end
+		--if tContains(priority, button) then
+		--	table.insert(sortTbl, 2, button)
+		--else
+			table.insert(sortTbl, button)
+		--end
 	end
-	
-	for k, v in pairs(sortTbl) do
-		local frame = _G[v]
 
-		frame:SetParent(MMBF)
-		frame:ClearAllPoints()
+	local offsetY = 0
 
-		if k == 1 then
-			frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, 0)
-		else
-			frame:SetPoint("TOP", _G[sortTbl[(k-1)]], "BOTTOM", 0, 0)
+	for _, button in pairs(sortTbl) do
+		button:SetParent(MMBF)
+		button:ClearAllPoints()
+
+		if button:IsShown() and button:IsVisible() then
+			button:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, -offsetY)
+			offsetY = offsetY + button:GetHeight()
 		end
+
+		--if k == 1 then
+		--	button:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, 0)
+		--else
+		--	button:SetPoint("TOP", sortTbl[(k-1)], "BOTTOM", 0, 0)
+		--end
 	end
 
 	MiniMapTracking:ClearAllPoints()
