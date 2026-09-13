@@ -1,4 +1,4 @@
-local mapBorder = CreateFrame("Frame", nil, UIParent)
+local mapBorder = CreateFrame("Frame", "SteakMapBorder", UIParent)
 
 --local MMAPW = 312
 local MMAPW = 220

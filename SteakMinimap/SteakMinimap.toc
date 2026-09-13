@@ -13,7 +13,7 @@ Core.lua
 #poi.lua
 #Coords.lua
 #ZoneText.lua
-#QuestLog.lua
+QuestLog.lua
 #Units.lua
 Herbs.lua
 Mine.lua

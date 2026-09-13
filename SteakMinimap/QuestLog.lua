@@ -1,6 +1,6 @@
 local f = CreateFrame("Frame")
 
-local QUEST_LIST_WIDTH = (MapFrame and MapFrame:GetWidth() > 0) and MapFrame:GetWidth() or 312
+local QUEST_LIST_WIDTH = (MapFrame and MapFrame:GetWidth() > 0) and MapFrame:GetWidth() or 220
 local QUEST_SPACING = 10
 local ITEM_BUTTON_SIZE = 22
 local _, class = UnitClass("player")
@@ -8,7 +8,8 @@ local borderColor = RAID_CLASS_COLORS[class]
 
 local QuestListParent = CreateFrame("ScrollFrame", "SteakQuestListParent", UIParent)
 QuestListParent:SetSize(QUEST_LIST_WIDTH, GetScreenHeight() / 3)
-QuestListParent:SetPoint("BOTTOMLEFT", MapFrame, "TOPLEFT", 0, 10)
+--QuestListParent:SetPoint("BOTTOMLEFT", MapFrame, "TOPLEFT", 0, 10)
+QuestListParent:SetPoint("BOTTOMLEFT", SteakMapBorder, "TOPLEFT", 0, 10)
 --[[
 QuestListParent.bg = QuestListParent:CreateTexture(nil, "BACKGROUND")
 QuestListParent.bg:SetAllPoints()
@@ -32,7 +33,7 @@ header:SetBackdropColor(0.2, 0.2, 0.2, 1)
 header:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, 1)
 
 local label = header:CreateFontString(nil, "OVERLAY")
-label:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
+label:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINE")
 label:SetPoint("LEFT", header, "LEFT", 2, 0)
 header.label = label
 
@@ -41,7 +42,7 @@ QuestToggle:SetSize(20, 20)
 QuestToggle:SetPoint("RIGHT", header, "RIGHT", -5, 0)
 
 QuestToggle.text = QuestToggle:CreateFontString(nil, "OVERLAY")
-QuestToggle.text:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
+QuestToggle.text:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINE")
 QuestToggle.text:SetPoint("CENTER")
 QuestToggle.text:SetText("-")
 
@@ -104,7 +105,8 @@ local function OnEvent(self, event, ...)
 
 		if isHeader then
 			lastHeader = title
-		elseif lastHeader == currentZone then
+		--elseif lastHeader == currentZone then
+		else
 			local row = QuestList.rows[rowIndex]
 
 			if not row then
@@ -112,13 +114,13 @@ local function OnEvent(self, event, ...)
 				row:SetWidth(QUEST_LIST_WIDTH)
                 
 				row.title = row:CreateFontString(nil, "OVERLAY")
-				row.title:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
+				row.title:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINE")
 				--row.title:SetPoint("TOPLEFT", row, "TOPLEFT", 5, -2)
 				row.title:SetPoint("TOPLEFT", row, "TOPLEFT", 25, -2)
 				row.title:SetJustifyH("LEFT")
                 
 				row.obj = row:CreateFontString(nil, "OVERLAY")
-				row.obj:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINE")
+				row.obj:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 7, "OUTLINE")
 				row.obj:SetPoint("TOPLEFT", row.title, "BOTTOMLEFT", 10, -4)
 				--row.obj:SetWidth(QUEST_LIST_WIDTH - 30)
 				row.obj:SetWidth(QUEST_LIST_WIDTH - 50)
@@ -131,7 +133,7 @@ local function OnEvent(self, event, ...)
 				row.icon:SetPoint("RIGHT", row.title, "LEFT", -5, 0)
 
 				row.status = row:CreateFontString(nil, "OVERLAY")
-				row.status:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 8, "OUTLINE")
+				row.status:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 7, "OUTLINE")
 				row.status:SetPoint("CENTER", row.icon, "CENTER", 0, 0)
 				row.status:SetTextColor(1, 1, 0)
                 
