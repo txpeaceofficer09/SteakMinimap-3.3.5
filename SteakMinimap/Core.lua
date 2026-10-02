@@ -56,7 +56,7 @@ local function MoveMinimapButtons()
 		table.insert(frames, RollForMinimapButton)
 	end
 
-	local hideThese = {MinimapBackdrop, TimeManagerClockButton, MinimapZoomOut, MinimapZoomIn, MiniMapWorldMapButton, MinimapZoneTextButton}
+	local hideThese = {MinimapBackdrop, TimeManagerClockButton, MinimapZoomOut, MinimapZoomIn, MiniMapWorldMapButton, MinimapZoneTextButton, GameTimeFrame}
 	local difficulty = {GuildInstanceDifficulty, MiniMapInstanceDifficulty}
 
 	local parts = {Minimap, MinimapCluster, MinimapBackdrop}
@@ -77,7 +77,8 @@ local function MoveMinimapButtons()
 		end
 	end
 
-	local sortTbl = {GameTimeFrame, MiniMapTrackingButton, MiniMapMailFrame, MiniMapLFGFrame, MiniMapBattlefieldFrame}
+	--local sortTbl = {GameTimeFrame, MiniMapTrackingButton, MiniMapMailFrame, MiniMapLFGFrame, MiniMapBattlefieldFrame}
+	local sortTbl = {MiniMapTrackingButton, MiniMapMailFrame, MiniMapLFGFrame, MiniMapBattlefieldFrame}
 	--local sortTbl = {GameTimeFrame, MiniMapTrackingButton}
 	local priority = {MiniMapMailFrame, MiniMapLFGFrame, MiniMapBattlefieldFrame}
 
@@ -97,14 +98,20 @@ local function MoveMinimapButtons()
 	end
 
 	local offsetY = 0
+	local offsetX = 0
 
 	for _, button in pairs(sortTbl) do
 		button:SetParent(MMBF)
 		button:ClearAllPoints()
 
 		if button:IsShown() and button:IsVisible() then
-			button:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, -offsetY)
-			offsetY = offsetY + button:GetHeight()
+			button:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", offsetX, -offsetY)
+			if offsetY >= button:GetHeight()*6 then
+				offsetY = 0
+				offsetX = offsetX + button:GetWidth()
+			else
+				offsetY = offsetY + button:GetHeight()
+			end
 		end
 
 		--if k == 1 then
