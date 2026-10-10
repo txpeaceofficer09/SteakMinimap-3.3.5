@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: SteakMinimap_Coords
+## Notes: Display coordinate text on Steak Minimap.
+## Version: 1.0.0
+## Author: Soonbesteak
+## Dependencies: SteakMinimap
+Core.lua

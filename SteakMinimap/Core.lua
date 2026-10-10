@@ -1,211 +1,87 @@
+SteakMinimap = SteakMinimap or {}
+local SteakMinimap = SteakMinimap
+
+SteakMinimap.Modules = {}
+SteakMinimap.Frames = {}
+
 local mapBorder = CreateFrame("Frame", "SteakMapBorder", UIParent)
-
---local MMAPW = 312
-local MMAPW = 220
-local MMAPH = 220
-
-local borderColor = RAID_CLASS_COLORS[select(2, UnitClass("player"))]
-
 mapBorder:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -1, 20)
-mapBorder:SetSize(MMAPW, MMAPH)
-mapBorder:SetBackdrop( { bgFile = "Interface\\ChatFrame\\ChatFrameBackground", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1, insets = { left = -1, right = -1, top = -1, bottom = -1 } } )
-mapBorder:SetBackdropColor(0, 0, 0, 0.8)
-mapBorder:SetBackdropBorderColor(borderColor.r or 1, borderColor.g or 0.5, borderColor.b or 0, 1)
+mapBorder:SetSize(220, 220)
 mapBorder:SetFrameStrata("LOW")
+SteakMinimap.Frames.MapBorder = mapBorder
 
-local label = CreateFrame("Frame", "SteakZoneText", mapBorder)
-label:SetPoint("TOPLEFT", mapBorder, "TOPLEFT", 4, -4)
-label:SetFrameStrata("MEDIUM")
+function SteakMinimap:SetBackdrop(frame)
+	local borderColor = RAID_CLASS_COLORS[select(2, UnitClass("player"))]
 
-local bg = label:CreateTexture(nil, "BACKGROUND")
-bg:SetTexture(0, 0, 0, 0.8)
-bg:SetAllPoints()
-label.bg = bg
-
-local text = label:CreateFontString(nil, "OVERLAY")
-text:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
-text:SetPoint("CENTER", label, "CENTER", 0, 0)
-label.text = text
-
-local coordFrame = CreateFrame("Frame", nil, UIParent)
-
-coordFrame:SetSize(80, 20)
-coordFrame:SetPoint("BOTTOMLEFT", mapBorder, "BOTTOMLEFT", 4, 4)
-coordFrame:SetFrameStrata("MEDIUM")
-coordFrame:SetFrameLevel(mapBorder:GetFrameLevel()+2)
-coordFrame:SetBackdrop( { bgFile = "Interface\\DialogFrame\\UI-DialogBox-BackGround-Dark", edgeFile = nil, tile = true, tileSize = 32, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 } } )
-
-local coordText = coordFrame:CreateFontString(nil, "OVERLAY")
-coordText:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", 10, "OUTLINE")
-coordText:SetPoint("BOTTOMLEFT", coordFrame, "BOTTOMLEFT", 5, 5)
-coordText:SetTextColor(1, 1, 1)
-coordText:SetDrawLayer("OVERLAY", 7) 
-coordText:SetShadowColor(0, 0, 0, 1)
-coordText:SetShadowOffset(1, -1)
-
-local mmbf = CreateFrame("Frame", nil, UIParent)
-mmbf:SetSize(50, 50)
-mmbf:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, 0)
-
-local function MoveMinimapButtons()
-	--print("MoveMinimapButtons")
-
-	local frames = {}
-
-	if RollForMinimapButton then
-		table.insert(frames, RollForMinimapButton)
-	end
-
-	local hideThese = {MinimapBackdrop, TimeManagerClockButton, MinimapZoomOut, MinimapZoomIn, MiniMapWorldMapButton, MinimapZoneTextButton, GameTimeFrame}
-	local difficulty = {GuildInstanceDifficulty, MiniMapInstanceDifficulty}
-
-	local parts = {Minimap, MinimapCluster, MinimapBackdrop}
-
-	for _, part in pairs(parts) do
-		local kids = {part:GetChildren()}
-
-		for k, button in pairs(kids) do
-			if tContains(difficulty, button) then
-				button:SetParent(mapBorder)
-				button:SetFrameLevel(mapBorder:GetFrameLevel()+2)
-				button:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
-			elseif tContains(hideThese, button) then
-				button:Hide()
-			elseif button and ( button:GetName() ~= nil and not button:GetName():match("^Questie") ) and button ~= MinimapPing then
-				table.insert(frames, button)
-			end
-		end
-	end
-
-	--local sortTbl = {GameTimeFrame, MiniMapTrackingButton, MiniMapMailFrame, MiniMapLFGFrame, MiniMapBattlefieldFrame}
-	local sortTbl = {MiniMapTrackingButton, MiniMapMailFrame, MiniMapLFGFrame, MiniMapBattlefieldFrame}
-	--local sortTbl = {GameTimeFrame, MiniMapTrackingButton}
-	local priority = {MiniMapMailFrame, MiniMapLFGFrame, MiniMapBattlefieldFrame}
-
-	for _, button in pairs(frames) do
-		--if tContains(sortTbl, button) then
-			-- Do nothing the frame is already there.
-		--elseif button:IsShown() and button:IsVisible() then
-		--	table.insert(sortTbl, button)
-		--else
-			--table.insert(sortTbl, button)
-		--end
-		--if tContains(priority, button) then
-		--	table.insert(sortTbl, 2, button)
-		--else
-			table.insert(sortTbl, button)
-		--end
-	end
-
-	local offsetY = 0
-	local offsetX = 0
-
-	for _, button in pairs(sortTbl) do
-		button:SetParent(MMBF)
-		button:ClearAllPoints()
-
-		if button:IsShown() and button:IsVisible() then
-			button:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", offsetX, -offsetY)
-			if offsetY >= button:GetHeight()*6 then
-				offsetY = 0
-				offsetX = offsetX + button:GetWidth()
-			else
-				offsetY = offsetY + button:GetHeight()
-			end
-		end
-
-		--if k == 1 then
-		--	button:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, 0)
-		--else
-		--	button:SetPoint("TOP", sortTbl[(k-1)], "BOTTOM", 0, 0)
-		--end
-	end
-
-	MiniMapTracking:ClearAllPoints()
-	MiniMapTracking:SetParent(UIParent)
-	MiniMapTracking:SetAllPoints(MiniMapTrackingButton)
-
-	WatchFrame:SetParent(UIParent)
-	WatchFrame:ClearAllPoints()
-	WatchFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -50, -200)
+	frame:SetBackdrop({ bgFile = "Interface\\ChatFrame\\ChatFrameBackground", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1, insets = { left = -1, right = -1, top = -1, bottom = -1 } })
+	frame:SetBackdropColor(0, 0, 0, 0.8)
+	frame:SetBackdropBorderColor(borderColor.r or 1, borderColor.g or 0.5, borderColor.b or 0, 1)
 end
 
-local function OnUpdate(self, elapsed)
-	self.coordTimer = (self.coordTimer or 0) + elapsed
-	self.buttonUpdate = (self.buttonUpdate or 0) + elapsed
-	
-	if self.coordTimer >= 0.2 then
-		local x, y = GetPlayerMapPosition("player")
-	
-		coordText:SetText(string.format("%.1f, %.1f", x * 100, y * 100))
-		coordFrame:SetSize(math.max(coordFrame:GetWidth(), coordText:GetStringWidth()+10), coordText:GetHeight()+6)
+function SteakMinimap:CreateFont(frame, size)
+	local text = frame:CreateFontString(nil, "OVERLAY")
 
-		self.coordTimer = 0
-	end
+	text:SetFont("Interface\\AddOns\\SteakMinimap\\Audiowide-Regular.ttf", size or 10, "OUTLINE")
 
-	if self.buttonUpdate >= 2 then
-		MoveMinimapButtons()
+	return text
+end
 
-		self.buttonUpdate = 0
+function SteakMinimap:RegisterModule(module)
+	assert(module, "SteakMinimap:RegisterModule() requires a module")
+
+	table.insert(self.Modules, module)
+
+	module.Core = self
+
+	if module.Events then
+		for _, event in ipairs(module.Events) do
+			self:RegisterEvent(event)
+		end
 	end
 end
 
-local function OnEvent(self, event, ...)
-	if event == "UPDATE_INVENTORY_DURABILITY" then
-		if not InCombatLockdown() then
-			DurabilityFrame:ClearAllPoints()
-			DurabilityFrame:SetPoint("TOPRIGHT", mapBorder, "TOPLEFT", -5, 0)
-		end
-	elseif event == "PLAYER_ENTERING_WORLD" then
-		Minimap:SetParent(mapBorder)
+function SteakMinimap:RegisterEvent(event)
+	self.Frames.MapBorder:RegisterEvent(event)
+end
+
+function SteakMinimap:OnEvent(event, ...)
+	if event == "PLAYER_ENTERING_WORLD" then
 		Minimap:ClearAllPoints()
+		Minimap:SetParent(mapBorder)
 		Minimap:SetPoint("CENTER", mapBorder, "CENTER", 0, 0)
-		Minimap:SetSize(MMAPW-2, MMAPH-2)
+		Minimap:SetSize(mapBorder:GetWidth()-2, mapBorder:GetHeight()-2)
 		Minimap:SetScale(1)
-		MinimapNorthTag:Hide()
-
-		TimeManagerClockButton:Hide()
-		MinimapCluster:ClearAllPoints()
-		MinimapCluster:SetPoint("TOPLEFT", UIParent, "TOPRIGHT", 0, 0)
-		MinimapCluster:Hide()
 		Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8X8")
+	end
 
-		DurabilityFrame:ClearAllPoints()
-		DurabilityFrame:SetPoint("TOPRIGHT", mapBorder, "TOPLEFT", -5, 0)
-
-		label.text:SetText(GetRealZoneText())
-		label:SetSize(label.text:GetWidth()+20, label.text:GetHeight()+6)
-	elseif event:match("^ZONE_CHANGED") then
-		label.text:SetText(GetRealZoneText())
-		label:SetSize(label.text:GetWidth()+20, label.text:GetHeight()+6)
+	for _, module in ipairs(self.Modules) do
+		if module.OnEvent and module.Initialized then
+			module:OnEvent(event, ...)
+		end
 	end
 end
 
-mapBorder:RegisterEvent("ZONE_CHANGED")
-mapBorder:RegisterEvent("ZONE_CHANGED_INDOORS")
-mapBorder:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-mapBorder:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
-mapBorder:RegisterEvent("PLAYER_ENTERING_WORLD")
+function SteakMinimap:OnUpdate(elapsed)
+	local start = debugprofilestop()
 
---mapBorder:RegisterEvent("MINIMAP_UPDATE_TRACKING")
---mapBorder:RegisterEvent("PLAYER_LOGIN")
---mapBorder:RegisterEvent("VARIABLES_LOADED")
---mapBorder:RegisterEvent("WORLD_MAP_UPDATE")
---mapBorder:RegisterEvent("CLOSE_WORLD_MAP")
---mapBorder:RegisterEvent("WORLD_MAP_NAME_UPDATE")
---mapBorder:RegisterEvent("MINIMAP_PING")
+	for _, module in ipairs(self.Modules) do
+		if module.Initialize and not module.Initialized then
+			module:Initialize()
+			module.Initialized = true
 
-mapBorder:SetScript("OnEvent", OnEvent)
-mapBorder:SetScript("OnUpdate", OnUpdate)
+			if debugprofilestop() - start >= 3 then return end
+		end
+	end
 
-hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)
-	tooltip:ClearAllPoints()
-	tooltip:SetOwner(parent, "ANCHOR_NONE")
-	tooltip:SetPoint("BOTTOMRIGHT", mapBorder, "TOPRIGHT", -20, 20)
-end)
+	for _, module in ipairs(self.Modules) do
+		if module.OnUpdate and module.Initialized then
+			module:OnUpdate(elapsed)
+		end
+	end
+end
 
-MiniMapInstanceDifficulty:HookScript("OnShow", function(self)
-	self:ClearAllPoints()
-	self:SetParent(mapBorder)
-	self:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
-end)
+mapBorder:SetScript("OnEvent", function(_, event, ...) SteakMinimap:OnEvent(event, ...) end)
+mapBorder:SetScript("OnUpdate", function(_, elapsed) SteakMinimap:OnUpdate(elapsed) end)
+
+SteakMinimap:SetBackdrop(mapBorder)
+SteakMinimap:RegisterEvent("PLAYER_ENTERING_WORLD")

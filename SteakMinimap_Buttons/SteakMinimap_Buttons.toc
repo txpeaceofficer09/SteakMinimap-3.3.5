@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: SteakMinimap_Buttons
+## Notes: Move all the clutter away from the minimap.
+## Version: 1.0.0
+## Author: Soonbesteak
+## Dependencies: SteakMinimap
+Core.lua
