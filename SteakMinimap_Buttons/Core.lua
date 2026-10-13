@@ -23,6 +23,12 @@ function Module:IsQuestieFrame(frame)
 	return name and name:match("^Questie") ~= nil
 end
 
+function Module:IsGathererFrame(frame)
+	local name = frame:GetName()
+
+	return name and name:match("^GatherNote") ~= nil
+end
+
 function Module:HideFrame(frame)
 	if not frame then
 		return
@@ -73,7 +79,7 @@ function Module:CollectChildren(parent)
 			child:SetFrameLevel(mapBorder:GetFrameLevel() + 2)
 			child:ClearAllPoints()
 			child:SetPoint("TOPRIGHT", mapBorder, "TOPRIGHT", 0, 0)
-		elseif child ~= MinimapPing and not self:IsQuestieFrame(child) then
+		elseif child ~= MinimapPing and not self:IsQuestieFrame(child) and not self:IsGathererFrame(child) then
 			self:RegisterButton(child)
 		end
 	end
